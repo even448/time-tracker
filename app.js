@@ -5,17 +5,32 @@ let appData = {
     partitions: ['默认'],
     settings: {
         theme: 'light'
-    }
+    },
+    focusSessions: [], // { id, taskId, taskTitle, startTime, duration, type, createdAt }
+    focusTasks: [] // { id, title } - Independent focus tasks
 };
 
 let chartInstance = null;
 let searchQuery = '';
+
+// Focus Timer State
+let focusTimer = {
+    interval: null,
+    timeLeft: 25 * 60, // seconds
+    totalTime: 25 * 60, // target for pomodoro
+    elapsed: 0, // for stopwatch
+    isRunning: false,
+    isPaused: false,
+    mode: 'pomodoro', // 'pomodoro' or 'stopwatch'
+    currentTask: null // { id, title }
+};
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
     initTheme();
     renderAll();
+    renderFocusStats(); // Initial stats render
     registerSW();
 
     // 绑定主题切换
@@ -47,6 +62,7 @@ function loadData() {
         // 兼容性处理
         if (!appData.partitions) appData.partitions = ['默认'];
         if (!appData.settings) appData.settings = { theme: 'light' };
+        if (!appData.focusTasks) appData.focusTasks = [];
     }
 }
 
@@ -98,25 +114,34 @@ function handleSearch(val) {
 function switchTab(tab) {
     const p1 = document.getElementById('page-countdown');
     const p2 = document.getElementById('page-todo');
+    const p3 = document.getElementById('page-focus');
+    
     const n1 = document.getElementById('nav-countdown');
     const n2 = document.getElementById('nav-todo');
+    const n3 = document.getElementById('nav-focus');
+
+    // Reset all
+    [p1, p2, p3].forEach(p => p.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none'));
+    [p1, p2, p3].forEach(p => p.classList.remove('-translate-x-full'));
+    
+    [n1, n2, n3].forEach(n => {
+        n.classList.remove('text-primary', 'text-secondary', 'text-emerald-600');
+        n.classList.add('text-stone-400');
+    });
 
     if (tab === 'countdown') {
-        p1.classList.remove('-translate-x-full', 'opacity-0', 'pointer-events-none');
-        p2.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
-        
+        p1.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
         n1.classList.add('text-primary');
-        n1.classList.remove('text-gray-400');
-        n2.classList.remove('text-secondary'); // 假设todo用secondary色
-        n2.classList.add('text-gray-400');
-    } else {
-        p1.classList.add('-translate-x-full', 'opacity-0', 'pointer-events-none');
+        n1.classList.remove('text-stone-400');
+    } else if (tab === 'todo') {
         p2.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
-        
-        n1.classList.remove('text-primary');
-        n1.classList.add('text-gray-400');
         n2.classList.add('text-secondary');
-        n2.classList.remove('text-gray-400');
+        n2.classList.remove('text-stone-400');
+    } else if (tab === 'focus') {
+        p3.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
+        n3.classList.add('text-emerald-600'); // Use Emerald (Warm Green) for Focus
+        n3.classList.remove('text-stone-400');
+        renderFocusStats();
     }
 }
 
@@ -125,6 +150,8 @@ function renderAll() {
     renderCountdowns();
     renderPartitions();
     renderTodos();
+    renderFocusPresets();
+    renderFocusTodoList();
 }
 
 function renderCountdowns() {
@@ -217,33 +244,26 @@ function createCountdownCard(item) {
         subText = `${days}天 ${hours}小时 ${minutes}分钟`;
     }
     
-    // Colors
+    // Colors - Flat
     const colorMap = {
-        blue: 'from-blue-500 to-blue-600',
-        red: 'from-red-500 to-red-600',
-        green: 'from-emerald-500 to-emerald-600',
-        purple: 'from-purple-500 to-purple-600'
+        blue: 'bg-blue-500',
+        red: 'bg-red-500',
+        green: 'bg-emerald-500',
+        purple: 'bg-purple-500'
     };
-    const gradientClass = colorMap[item.color] || colorMap.blue;
+    const bgClass = colorMap[item.color] || colorMap.blue;
 
     const div = document.createElement('div');
-    // Skeuomorphic layout
-    // h-auto to fit content, mb-4 for spacing
-    div.className = 'skeuomorphic-card mb-4 touch-pan-y transition-transform duration-200';
+    // Skeuomorphic layout restored with flat colors
+    div.className = 'relative touch-pan-y transition-transform duration-200 mt-3'; // Add margin top for rings
     
-    // Bg Image Logic (Apply to the paper body or the top header? Days Matter usually puts image on the whole background or just header. 
-    // Let's put it on the header for calendar style, or use it as a texture for the whole card with overlay.)
-    // User asked for "Skeuomorphic Calendar". Standard: Top color bar, White body.
-    // If user has BgImage, maybe replace the Top Color Bar with the image? Or the whole card?
-    // Let's try replacing the Top Color Bar with the Image if exists, or if it's a full card bg, maybe apply to the whole card with multiply blend mode.
-    // Let's stick to "Top Header" having the image if present, else gradient.
-    
+    // Bg Image Logic
     let headerStyle = '';
-    let headerClass = `calendar-top ${gradientClass}`;
+    let headerClass = `calendar-top ${bgClass}`;
     
     if (item.bgImage) {
-        headerStyle = `background-image: url('${item.bgImage}'); background-size: cover; background-position: center; height: 120px;`; // Taller header for image
-        headerClass = 'calendar-top'; // Remove gradient class
+        headerStyle = `background-image: url('${item.bgImage}'); background-size: cover; background-position: center; height: 120px;`;
+        headerClass = 'calendar-top h-[120px]'; // Override height
     }
 
     const archiveBtn = (isPast && !item.countUpMode) 
@@ -255,21 +275,13 @@ function createCountdownCard(item) {
             <i class="fa-solid fa-trash mr-2"></i> 删除
         </div>
         
-        <div class="swipe-item bg-white dark:bg-gray-800 rounded-xl overflow-hidden relative z-10" id="cd-${item.id}">
-            <!-- Binder Rings -->
-            <div class="binder-rings">
-                <div class="ring"></div>
-                <div class="ring"></div>
-                <div class="ring"></div>
-                <div class="ring"></div>
-            </div>
-            
+        <div class="swipe-item modern-card calendar-card overflow-hidden relative z-10" id="cd-${item.id}">
             <!-- Header -->
             <div class="${headerClass}" style="${headerStyle}">
-                <div class="absolute inset-0 bg-black/10"></div> <!-- Slight overlay for depth -->
+                <div class="absolute inset-0 bg-black/5 rounded-t-2xl"></div> <!-- Subtle overlay for depth -->
                 ${archiveBtn}
-                <div class="absolute bottom-2 left-4 right-4">
-                     <h3 class="font-bold text-white text-lg truncate shadow-black drop-shadow-md">
+                <div class="absolute bottom-2 left-4 right-4 z-10">
+                     <h3 class="font-bold text-white text-lg truncate drop-shadow-sm">
                         ${item.title} 
                         ${item.repeat && item.repeat !== 'none' ? '<i class="fa-solid fa-rotate-right text-xs ml-1 opacity-80"></i>' : ''}
                         ${item.countUpMode ? '<span class="text-[10px] bg-white/20 px-1 rounded ml-1">正数</span>' : ''}
@@ -278,18 +290,16 @@ function createCountdownCard(item) {
             </div>
             
             <!-- Body -->
-            <div class="p-4 flex items-center justify-between relative">
-                <div class="paper-texture"></div>
-                
+            <div class="p-5 flex items-center justify-between relative bg-white dark:bg-[#1c1917]">
                 <div class="flex-1 relative z-10">
-                     <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1 uppercase tracking-wide">${labelText}</p>
-                     <p class="text-xs text-gray-400">${target.toLocaleDateString()} ${target.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                     <p class="text-xs text-stone-500 dark:text-stone-400 font-medium mb-1 uppercase tracking-wide">${labelText}</p>
+                     <p class="text-xs text-stone-400">${target.toLocaleDateString()} ${target.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                      <p class="text-xs text-secondary mt-1 font-mono">${subText}</p>
                 </div>
                 
                 <div class="relative z-10 text-right">
-                    <span class="text-4xl font-bold text-gray-800 dark:text-gray-100">${mainNumber}</span>
-                    <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">天</span>
+                    <span class="text-4xl font-bold text-stone-800 dark:text-stone-100">${mainNumber}</span>
+                    <span class="text-sm text-stone-500 dark:text-stone-400 font-medium">天</span>
                 </div>
             </div>
         </div>
@@ -348,15 +358,15 @@ function renderArchiveList() {
     const archived = appData.countdowns.filter(i => i.archived);
     
     if (archived.length === 0) {
-        list.innerHTML = '<p class="text-center text-gray-400 py-4">暂无归档</p>';
+        list.innerHTML = '<p class="text-center text-stone-400 py-4">暂无归档</p>';
         return;
     }
     
     list.innerHTML = archived.map(item => `
-        <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg mb-2">
+        <div class="flex justify-between items-center bg-stone-50 dark:bg-stone-700/50 p-3 rounded-lg mb-2">
             <div>
-                <p class="font-bold text-sm dark:text-gray-200">${item.title}</p>
-                <p class="text-xs text-gray-400">${new Date(item.targetDate).toLocaleDateString()}</p>
+                <p class="font-bold text-sm dark:text-stone-200">${item.title}</p>
+                <p class="text-xs text-stone-400">${new Date(item.targetDate).toLocaleDateString()}</p>
             </div>
             <button onclick="unarchiveCountdown('${item.id}')" class="text-primary text-sm font-bold">还原</button>
         </div>
@@ -380,19 +390,19 @@ function renderPartitions() {
     
     // 渲染顶部导航
     nav.innerHTML = appData.partitions.map((p, idx) => `
-        <button onclick="switchPartition('${p}')" class="px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${idx === 0 ? 'bg-secondary text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}">
+        <button onclick="switchPartition('${p}')" class="px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${idx === 0 ? 'bg-primary text-white shadow-md' : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300'}">
             ${p}
         </button>
     `).join('') + `
-        <button onclick="openModal('modal-manage-partition')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 shrink-0">
+        <button onclick="openModal('modal-manage-partition')" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-700 flex items-center justify-center text-stone-500 shrink-0">
             <i class="fa-solid fa-plus text-xs"></i>
         </button>
     `;
 
     // 渲染管理列表
     list.innerHTML = appData.partitions.map(p => `
-        <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-            <span class="text-sm dark:text-gray-300">${p}</span>
+        <div class="flex justify-between items-center bg-stone-50 dark:bg-stone-700/50 p-2 rounded">
+            <span class="text-sm dark:text-stone-300">${p}</span>
             ${p !== '默认' ? `<button onclick="deletePartition('${p}')" class="text-red-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>` : ''}
         </div>
     `).join('');
@@ -408,7 +418,7 @@ function switchPartition(p) {
         if (btn.textContent.trim() === p) {
             btn.className = 'px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors bg-secondary text-white shadow-md';
         } else if (!btn.querySelector('.fa-plus')) {
-            btn.className = 'px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300';
+            btn.className = 'px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300';
         }
     });
     renderTodos();
@@ -441,31 +451,32 @@ function renderTodos() {
             container.appendChild(createTodoCard(item));
         });
     }
+    renderFocusTodoList();
 }
 
 function createTodoCard(item) {
     const div = document.createElement('div');
-    div.className = 'relative overflow-hidden rounded-xl shadow-sm bg-white dark:bg-gray-800 touch-pan-y';
+    div.className = 'modern-card relative overflow-hidden touch-pan-y';
     
     const progressColor = item.progress >= 100 ? 'text-green-500' : 'text-secondary';
     
     const subtaskInfo = item.subtasks && item.subtasks.length > 0 
-        ? `<span class="text-xs text-gray-400 mr-2"><i class="fa-solid fa-list-ul mr-1"></i>${item.subtasks.filter(s=>s.completed).length}/${item.subtasks.length}</span>`
+        ? `<span class="text-xs text-stone-400 mr-2"><i class="fa-solid fa-list-ul mr-1"></i>${item.subtasks.filter(s=>s.completed).length}/${item.subtasks.length}</span>`
         : '';
         
     const deadlineInfo = item.deadline 
-        ? `<span class="text-xs ${new Date(item.deadline) < new Date() ? 'text-red-400' : 'text-gray-400'}"><i class="fa-regular fa-clock mr-1"></i>${new Date(item.deadline).toLocaleDateString()}</span>` 
+        ? `<span class="text-xs ${new Date(item.deadline) < new Date() ? 'text-red-400' : 'text-stone-400'}"><i class="fa-regular fa-clock mr-1"></i>${new Date(item.deadline).toLocaleDateString()}</span>` 
         : '';
 
     div.innerHTML = `
         <div class="p-4 flex items-center cursor-pointer" onclick="openTodoDetail('${item.id}')">
             <div class="mr-3" onclick="event.stopPropagation(); toggleTodo('${item.id}')">
-                <div class="w-6 h-6 rounded-full border-2 ${item.completed ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-gray-600'} flex items-center justify-center transition-colors">
+                <div class="w-6 h-6 rounded-full border-2 ${item.completed ? 'bg-green-500 border-green-500' : 'border-stone-300 dark:border-stone-600'} flex items-center justify-center transition-colors">
                     ${item.completed ? '<i class="fa-solid fa-check text-white text-xs"></i>' : ''}
                 </div>
             </div>
             <div class="flex-1 min-w-0 flex flex-col justify-center">
-                <h3 class="font-bold text-gray-800 dark:text-gray-100 truncate ${item.completed ? 'line-through text-gray-400' : ''}">${item.title}</h3>
+                <h3 class="font-bold text-stone-800 dark:text-stone-100 truncate ${item.completed ? 'line-through text-stone-400' : ''}">${item.title}</h3>
                 <div class="flex items-center mt-1">
                     ${subtaskInfo}
                     ${deadlineInfo}
@@ -475,10 +486,10 @@ function createTodoCard(item) {
                  <!-- Circular Progress -->
                  <div class="relative w-10 h-10 flex items-center justify-center">
                     ${getCircularProgress(item.progress, 40, progressColor)}
-                    <span class="absolute text-[10px] font-bold ${item.completed ? 'text-green-500' : 'text-gray-500 dark:text-gray-400'}">${item.progress}%</span>
+                    <span class="absolute text-[10px] font-bold ${item.completed ? 'text-green-500' : 'text-stone-500 dark:text-stone-400'}">${item.progress}%</span>
                  </div>
                  
-                <button onclick="event.stopPropagation(); deleteTodo('${item.id}')" class="text-gray-400 hover:text-red-500 p-2">
+                <button onclick="event.stopPropagation(); deleteTodo('${item.id}')" class="text-stone-400 hover:text-red-500 p-2">
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
@@ -495,7 +506,7 @@ function getCircularProgress(percentage, size, colorClass) {
     return `
         <svg class="transform -rotate-90" width="${size}" height="${size}">
             <circle
-                class="text-gray-100 dark:text-gray-700"
+                class="text-stone-100 dark:text-stone-700"
                 stroke-width="3"
                 stroke="currentColor"
                 fill="transparent"
@@ -530,6 +541,340 @@ function openModal(id) {
             content.classList.remove('translate-y-full');
         }
     }, 10);
+}
+
+// Focus Timer Logic
+function setFocusMode(mode) {
+    if (focusTimer.isRunning) {
+        if(!confirm('切换模式将重置当前计时，确定吗？')) return;
+        stopTimer(false); // Stop without saving
+    }
+    
+    focusTimer.mode = mode;
+    const btnP = document.getElementById('btn-mode-pomodoro');
+    const btnS = document.getElementById('btn-mode-stopwatch');
+    
+    if (mode === 'pomodoro') {
+        focusTimer.timeLeft = 25 * 60;
+        focusTimer.totalTime = 25 * 60;
+        btnP.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white dark:bg-stone-600 shadow-sm text-primary';
+        btnS.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all text-stone-500 dark:text-stone-400';
+    } else {
+        focusTimer.elapsed = 0;
+        focusTimer.timeLeft = 0; // In stopwatch, we display elapsed
+        btnS.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white dark:bg-stone-600 shadow-sm text-primary';
+        btnP.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all text-stone-500 dark:text-stone-400';
+    }
+    
+    resetTimer();
+}
+
+function toggleTimer() {
+    const btn = document.getElementById('btn-timer-toggle');
+    
+    if (focusTimer.isRunning) {
+        // Pause
+        clearInterval(focusTimer.interval);
+        focusTimer.isRunning = false;
+        focusTimer.isPaused = true;
+        btn.innerHTML = '<i class="fa-solid fa-play ml-1"></i>';
+        btn.classList.remove('bg-yellow-500');
+        btn.classList.add('bg-primary');
+    } else {
+        // Start
+        focusTimer.isRunning = true;
+        focusTimer.isPaused = false;
+        btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        btn.classList.remove('bg-primary');
+        btn.classList.add('bg-yellow-500'); // Pause color
+        
+        focusTimer.interval = setInterval(() => {
+            if (focusTimer.mode === 'pomodoro') {
+                if (focusTimer.timeLeft > 0) {
+                    focusTimer.timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    stopTimer(true); // Completed
+                    showToast('专注完成！休息一下吧');
+                    if(Notification.permission === 'granted') {
+                        new Notification('专注完成', { body: '你已完成一个番茄钟！' });
+                    }
+                }
+            } else {
+                focusTimer.elapsed++;
+                updateTimerDisplay();
+            }
+        }, 1000);
+    }
+}
+
+function stopTimer(save = true) {
+    clearInterval(focusTimer.interval);
+    const btn = document.getElementById('btn-timer-toggle');
+    btn.innerHTML = '<i class="fa-solid fa-play ml-1"></i>';
+    btn.classList.remove('bg-yellow-500');
+    btn.classList.add('bg-primary');
+    
+    if (focusTimer.isRunning || focusTimer.isPaused) {
+        if (save) {
+            const duration = focusTimer.mode === 'pomodoro' 
+                ? (focusTimer.totalTime - focusTimer.timeLeft) 
+                : focusTimer.elapsed;
+            
+            if (duration > 60) { // Only save if > 1 minute
+                saveFocusSession(duration);
+            }
+        }
+    }
+    
+    focusTimer.isRunning = false;
+    focusTimer.isPaused = false;
+    
+    // Reset to initial state
+    if (focusTimer.mode === 'pomodoro') {
+        focusTimer.timeLeft = 25 * 60;
+    } else {
+        focusTimer.elapsed = 0;
+    }
+    updateTimerDisplay();
+}
+
+function resetTimer() {
+    stopTimer(false);
+}
+
+function updateTimerDisplay() {
+    const display = document.getElementById('timer-display');
+    const circle = document.getElementById('timer-progress');
+    const fullDash = 753.98; // 2 * PI * 120
+    
+    let seconds = 0;
+    let progress = 0;
+    
+    if (focusTimer.mode === 'pomodoro') {
+        seconds = focusTimer.timeLeft;
+        progress = (focusTimer.totalTime - focusTimer.timeLeft) / focusTimer.totalTime;
+    } else {
+        seconds = focusTimer.elapsed;
+        progress = 0; // Stopwatch typically doesn't have a progress circle unless we set a limit. Let's keep it full or spinning.
+        // For visual feedback, let's make it spin based on minute? Or just full.
+        // Let's invert it: circle fills up every 60m? No, let's just keep it full.
+        circle.style.strokeDashoffset = 0;
+    }
+    
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    display.textContent = `${m}:${s}`;
+    
+    if (focusTimer.mode === 'pomodoro') {
+        const offset = fullDash - (progress * fullDash); // Start full, reduce
+        // Actually typically pomodoro starts full and reduces. 
+        // If progress is 0 (start), offset should be 0.
+        // If progress is 1 (end), offset should be fullDash.
+        // Wait, stroke-dashoffset: 0 is full line. stroke-dashoffset: fullDash is empty.
+        // So we want to start at 0 and go to fullDash.
+        // progress goes 0 -> 1.
+        circle.style.strokeDashoffset = -1 * (progress * fullDash); 
+    }
+}
+
+function openFocusTaskSelect() {
+    openModal('modal-focus-task');
+}
+
+function renderFocusTodoList() {
+    const list = document.getElementById('focus-task-list');
+    if (!list) return;
+
+    list.innerHTML = appData.todos.filter(t => !t.completed).map(t => `
+        <button onclick="selectFocusTask('${t.id}')" class="w-full text-left px-4 py-3 bg-stone-50 dark:bg-stone-700/50 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700 flex justify-between items-center group transition-colors">
+            <span class="font-medium text-stone-700 dark:text-stone-200 truncate text-sm">${t.title}</span>
+            <i class="fa-solid fa-check text-primary opacity-0 group-hover:opacity-100 transition-opacity"></i>
+        </button>
+    `).join('');
+    
+    if (appData.todos.filter(t => !t.completed).length === 0) {
+        list.innerHTML = '<p class="text-center text-xs text-stone-400 py-2">暂无待办任务</p>';
+    }
+}
+
+function renderFocusPresets() {
+    const container = document.getElementById('focus-presets-list');
+    if (!container) return; // In case element doesn't exist yet
+    
+    container.innerHTML = appData.focusTasks.map(task => `
+        <div class="flex items-center justify-between bg-white dark:bg-stone-700 px-4 py-3 rounded-xl shadow-sm border border-stone-100 dark:border-stone-600 group cursor-pointer hover:border-primary transition-colors" onclick="selectFocusTask('${task.id}')">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <span class="font-medium text-stone-700 dark:text-stone-200">${task.title}</span>
+            </div>
+            <button onclick="event.stopPropagation(); deleteFocusPreset('${task.id}')" class="text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function addFocusPreset() {
+    const input = document.getElementById('new-focus-task-input');
+    const title = input.value.trim();
+    if (!title) return;
+    
+    const newTask = {
+        id: 'fp-' + Date.now(),
+        title: title
+    };
+    
+    appData.focusTasks.push(newTask);
+    saveData();
+    renderFocusPresets();
+    input.value = '';
+    showToast('已添加常用专注');
+}
+
+function deleteFocusPreset(id) {
+    if(confirm('确定删除此常用专注吗？')) {
+        appData.focusTasks = appData.focusTasks.filter(t => t.id !== id);
+        saveData();
+        renderFocusPresets();
+    }
+}
+
+// Modify selectFocusTask to handle object or id
+function selectFocusTask(taskOrId) {
+    if (taskOrId && typeof taskOrId === 'object') {
+        // Direct object passed (legacy or future use)
+        focusTimer.currentTask = { id: taskOrId.id, title: taskOrId.title };
+        document.getElementById('current-focus-task').textContent = taskOrId.title;
+        closeModal('modal-focus-task');
+    } else if (taskOrId) {
+        // ID passed - check Focus Presets first, then Todos
+        let task = appData.focusTasks.find(t => t.id === taskOrId);
+        if (!task) {
+            task = appData.todos.find(t => t.id === taskOrId);
+        }
+        
+        if (task) {
+            focusTimer.currentTask = { id: task.id, title: task.title };
+            document.getElementById('current-focus-task').textContent = task.title;
+        }
+        closeModal('modal-focus-task');
+    } else {
+        // Null passed (Clear)
+        focusTimer.currentTask = null;
+        document.getElementById('current-focus-task').textContent = '选择关联任务'; // Reset text
+        closeModal('modal-focus-task');
+    }
+}
+
+function saveFocusSession(duration) {
+    const session = {
+        id: Date.now().toString(),
+        taskId: focusTimer.currentTask ? focusTimer.currentTask.id : null,
+        taskTitle: focusTimer.currentTask ? focusTimer.currentTask.title : '未关联任务',
+        startTime: Date.now() - duration * 1000,
+        duration: duration, // seconds
+        type: focusTimer.mode,
+        createdAt: new Date().toISOString()
+    };
+    
+    if (!appData.focusSessions) appData.focusSessions = [];
+    appData.focusSessions.push(session);
+    saveData();
+    renderFocusStats();
+    showToast(`专注 ${Math.floor(duration/60)} 分钟已记录`);
+}
+
+function renderFocusStats() {
+    if (!appData.focusSessions) appData.focusSessions = [];
+    
+    const now = new Date();
+    const todayStr = now.toDateString();
+    
+    // 1. Today Total
+    const todaySessions = appData.focusSessions.filter(s => new Date(s.createdAt).toDateString() === todayStr);
+    const todaySeconds = todaySessions.reduce((acc, s) => acc + s.duration, 0);
+    document.getElementById('stats-today-total').textContent = formatDuration(todaySeconds);
+    
+    // 2. Daily Avg
+    // Group by date
+    const sessionsByDate = {};
+    appData.focusSessions.forEach(s => {
+        const d = new Date(s.createdAt).toDateString();
+        if (!sessionsByDate[d]) sessionsByDate[d] = 0;
+        sessionsByDate[d] += s.duration;
+    });
+    const daysCount = Object.keys(sessionsByDate).length || 1;
+    const totalAllSeconds = appData.focusSessions.reduce((acc, s) => acc + s.duration, 0);
+    const avgSeconds = Math.floor(totalAllSeconds / daysCount);
+    document.getElementById('stats-daily-avg').textContent = formatDuration(avgSeconds);
+    
+    // 3. Rankings
+    const filter = document.getElementById('rank-filter') ? document.getElementById('rank-filter').value : 'day';
+    renderFocusRankings(filter);
+}
+
+function renderFocusRankings(filter) {
+    const list = document.getElementById('focus-rankings-list');
+    if (!list) return;
+    
+    const now = new Date();
+    let filteredSessions = [];
+    
+    if (filter === 'day') {
+        const todayStr = now.toDateString();
+        filteredSessions = appData.focusSessions.filter(s => new Date(s.createdAt).toDateString() === todayStr);
+    } else if (filter === 'week') {
+        const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filteredSessions = appData.focusSessions.filter(s => new Date(s.createdAt) >= lastWeek);
+    } else {
+        const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        filteredSessions = appData.focusSessions.filter(s => new Date(s.createdAt) >= lastMonth);
+    }
+    
+    // Group by Task
+    const taskStats = {}; // { taskTitle: seconds }
+    filteredSessions.forEach(s => {
+        const title = s.taskTitle || '未关联任务';
+        if (!taskStats[title]) taskStats[title] = 0;
+        taskStats[title] += s.duration;
+    });
+    
+    // Sort
+    const sorted = Object.entries(taskStats).sort((a, b) => b[1] - a[1]);
+    
+    if (sorted.length === 0) {
+        list.innerHTML = '<p class="text-center text-xs text-stone-400 py-2">该时间段暂无专注记录</p>';
+        return;
+    }
+    
+    const maxVal = sorted[0][1];
+    
+    list.innerHTML = sorted.map(([title, seconds], idx) => `
+        <div class="flex items-center space-x-3">
+            <span class="text-xs font-bold text-stone-400 w-4">${idx + 1}</span>
+            <div class="flex-1">
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="font-medium dark:text-stone-300 truncate max-w-[120px]">${title}</span>
+                    <span class="text-stone-500">${formatDuration(seconds)}</span>
+                </div>
+                <div class="h-1.5 bg-stone-100 dark:bg-stone-700 rounded-full overflow-hidden">
+                    <div class="h-full bg-primary rounded-full" style="width: ${(seconds / maxVal) * 100}%"></div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function formatDuration(seconds) {
+    if (seconds < 60) return `${seconds}s`;
+    const m = Math.floor(seconds / 60);
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    const remM = m % 60;
+    return `${h}h ${remM}m`;
 }
 
 function closeModal(id) {
@@ -782,19 +1127,19 @@ function updateProgressFromSubtasks(item) {
 function renderSubtasks(subtasks) {
     const list = document.getElementById('subtask-list');
     if (!subtasks || subtasks.length === 0) {
-        list.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">无子任务</p>';
+        list.innerHTML = '<p class="text-xs text-stone-400 text-center py-2">无子任务</p>';
         return;
     }
     
     list.innerHTML = subtasks.map(s => `
-        <div class="flex items-center justify-between bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-600">
+        <div class="flex items-center justify-between bg-white dark:bg-stone-800 p-2 rounded-lg border border-stone-100 dark:border-stone-600">
             <div class="flex items-center space-x-2 flex-1 min-w-0 cursor-pointer" onclick="toggleSubtask('${s.id}')">
-                <div class="w-5 h-5 rounded border ${s.completed ? 'bg-secondary border-secondary' : 'border-gray-300 dark:border-gray-500'} flex items-center justify-center transition-colors">
+                <div class="w-5 h-5 rounded border ${s.completed ? 'bg-secondary border-secondary' : 'border-stone-300 dark:border-stone-500'} flex items-center justify-center transition-colors">
                     ${s.completed ? '<i class="fa-solid fa-check text-white text-[10px]"></i>' : ''}
                 </div>
-                <span class="text-sm dark:text-gray-300 truncate ${s.completed ? 'line-through text-gray-400' : ''}">${s.content}</span>
+                <span class="text-sm dark:text-stone-300 truncate ${s.completed ? 'line-through text-stone-400' : ''}">${s.content}</span>
             </div>
-            <button onclick="deleteSubtask('${s.id}')" class="text-gray-400 hover:text-red-500 ml-2 px-2"><i class="fa-solid fa-xmark"></i></button>
+            <button onclick="deleteSubtask('${s.id}')" class="text-stone-400 hover:text-red-500 ml-2 px-2"><i class="fa-solid fa-xmark"></i></button>
         </div>
     `).join('');
 }
@@ -839,7 +1184,7 @@ function renderHistory(history) {
     list.innerHTML = history.slice().reverse().map(h => {
         let tagHtml = '';
         if (h.tag) {
-            let color = 'bg-gray-200 text-gray-700';
+            let color = 'bg-stone-200 text-stone-700';
             if (h.tag === 'Fix') color = 'bg-red-100 text-red-700';
             else if (h.tag === 'Feat') color = 'bg-green-100 text-green-700';
             else if (h.tag === 'Docs') color = 'bg-blue-100 text-blue-700';
@@ -849,12 +1194,12 @@ function renderHistory(history) {
         }
         
         return `
-        <div class="relative pl-6 pb-4 border-l border-gray-200 dark:border-gray-600 last:pb-0">
-            <div class="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-500"></div>
-            <div class="text-xs text-gray-400 mb-1 flex items-center">
+        <div class="relative pl-6 pb-4 border-l border-stone-200 dark:border-stone-600 last:pb-0">
+            <div class="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-stone-300 dark:bg-stone-500"></div>
+            <div class="text-xs text-stone-400 mb-1 flex items-center">
                 ${new Date(h.date).toLocaleString()}
             </div>
-            <div class="text-sm dark:text-gray-300 flex items-center">
+            <div class="text-sm dark:text-stone-300 flex items-center">
                 ${tagHtml}
                 <span class="font-bold text-secondary mr-2">${h.progress}%</span>
                 <span>${h.note}</span>
@@ -1055,7 +1400,7 @@ function renderHeatmap() {
         const dateKey = dateObj.toISOString().slice(0, 10);
         const count = activityMap[dateKey] || 0;
         
-        let colorClass = 'bg-gray-100 dark:bg-gray-700';
+        let colorClass = 'bg-stone-100 dark:bg-stone-700';
         if (count > 0) colorClass = 'bg-green-200';
         if (count > 2) colorClass = 'bg-green-400';
         if (count > 5) colorClass = 'bg-green-600';

@@ -1,3 +1,8 @@
+:root {
+    --primary-color: #f97316;
+    --secondary-color: #ef4444;
+}
+
 /* 隐藏滚动条但保留功能 */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -15,7 +20,7 @@
 /* 滑动操作样式 */
 .swipe-item {
     transition: transform 0.2s ease-out;
-    touch-action: pan-y; /* 允许垂直滚动，接管水平触摸 */
+    touch-action: pan-y;
     position: relative;
     z-index: 10;
 }
@@ -32,7 +37,7 @@
     justify-content: flex-end;
     padding-right: 20px;
     z-index: 1;
-    border-radius: 0.75rem;
+    border-radius: 16px; /* Updated radius */
     color: white;
     font-weight: bold;
 }
@@ -60,75 +65,94 @@
 body {
     -webkit-tap-highlight-color: transparent;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f0f2f5;
+    background-color: #fcfaf8; /* Warm bg */
 }
 
-/* Skeuomorphic Calendar Card Styles */
-.skeuomorphic-card {
-    background: #fdfdfd;
-    background-image: linear-gradient(#fdfdfd 0%, #f4f4f4 100%);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 10px 15px -3px rgba(0,0,0,0.1);
-    border-radius: 12px;
+/* Modern Card Style (Unified) */
+.modern-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.05); /* Softer, layered shadow */
+    padding: 20px;
     position: relative;
-    overflow: visible !important; /* Allow rings to stick out */
-    border: 1px solid #e5e7eb;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
 }
 
 /* Dark mode adjustment for card */
-.dark .skeuomorphic-card {
-    background: #1f2937;
-    background-image: linear-gradient(#1f2937 0%, #111827 100%);
-    border-color: #374151;
+.dark .modern-card {
+    background: #1c1917; /* Warm dark */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Top colored bar of the calendar */
+/* Countdown Card Skeuomorphism */
+.calendar-card {
+    padding: 0; /* Override modern-card padding for calendar layout */
+    overflow: visible; /* Allow rings to stick out if needed */
+}
+
 .calendar-top {
-    height: 40px;
-    border-radius: 12px 12px 0 0;
+    height: 70px;
+    border-radius: 16px 16px 0 0;
     position: relative;
-    background: linear-gradient(to bottom, var(--tw-gradient-from), var(--tw-gradient-to));
-    box-shadow: inset 0 -1px 2px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    /* Use solid colors via utility classes, but structure is here */
 }
 
-/* Binder Rings */
-.binder-rings {
+/* Binding Rings / Holes */
+.calendar-top::before,
+.calendar-top::after {
+    content: '';
     position: absolute;
-    top: -10px;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-evenly;
-    pointer-events: none;
+    top: -8px;
+    width: 14px;
+    height: 24px;
+    background: #e7e5e4; /* Stone-200 ring */
+    border-radius: 10px;
+    border: 2px solid #d6d3d1; /* Stone-300 border */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     z-index: 20;
 }
 
-.ring {
-    width: 12px;
-    height: 24px;
-    background: linear-gradient(90deg, #9ca3af 0%, #d1d5db 30%, #f3f4f6 50%, #9ca3af 70%, #4b5563 100%);
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    position: relative;
+.calendar-top::before {
+    left: 40px;
 }
 
-.ring::after {
+.calendar-top::after {
+    right: 40px;
+}
+
+/* Holes on the body paper */
+.calendar-holes::before,
+.calendar-holes::after {
     content: '';
     position: absolute;
-    bottom: -4px;
-    left: 2px;
-    width: 8px;
-    height: 8px;
-    background: #374151;
+    top: 62px; /* Position below header */
+    width: 12px;
+    height: 12px;
+    background: #f5f5f4; /* Stone-100 */
     border-radius: 50%;
-    z-index: -1;
+    z-index: 5;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
 }
 
-/* Paper texture overlay */
-.paper-texture {
-    position: absolute;
-    inset: 0;
-    opacity: 0.03;
-    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23000000' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
-    pointer-events: none;
-    border-radius: 12px;
+/* Timer Circle Animation */
+.timer-circle-bg {
+    fill: none;
+    stroke: #e7e5e4; /* Stone-200 */
+    stroke-width: 8;
+}
+.dark .timer-circle-bg {
+    stroke: #44403c; /* Stone-700 */
+}
+.timer-circle-progress {
+    fill: none;
+    stroke: var(--secondary-color);
+    stroke-width: 8;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    transition: stroke-dashoffset 1s linear;
 }

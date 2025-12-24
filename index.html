@@ -21,9 +21,9 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#6366f1', // Indigo-500
-                        secondary: '#ec4899', // Pink-500
-                        dark: '#0f172a', // Slate-900 (Deeper dark)
+                        primary: '#f97316', // Orange-500 (Warm)
+                        secondary: '#ef4444', // Red-500 (Warm)
+                        dark: '#1c1917', // Stone-900 (Warm Dark)
                     },
                     fontFamily: {
                         sans: ['"Nunito"', '"Noto Sans SC"', 'sans-serif'],
@@ -35,45 +35,42 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300 h-screen overflow-hidden flex flex-col font-sans relative">
-
-    <!-- Ambient Background Light -->
-    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div class="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-purple-200/30 dark:bg-purple-900/20 blur-[100px]"></div>
-        <div class="absolute top-[40%] -right-[10%] w-[60%] h-[60%] rounded-full bg-blue-200/30 dark:bg-blue-900/20 blur-[100px]"></div>
-        <div class="absolute -bottom-[20%] left-[20%] w-[60%] h-[60%] rounded-full bg-pink-200/30 dark:bg-pink-900/20 blur-[100px]"></div>
-    </div>
+<body class="bg-[#fcfaf8] dark:bg-[#1c1917] text-stone-800 dark:text-stone-100 transition-colors duration-300 h-screen overflow-hidden flex flex-col font-sans relative">
 
     <!-- 顶部标题栏 -->
-    <header class="h-16 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-800/50 flex items-center justify-between px-4 z-20 shrink-0 sticky top-0">
-        <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-            时光记录
-        </h1>
-        <div class="flex space-x-3">
-            <button onclick="toggleSearch()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 shadow-sm">
-                <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
-            <button onclick="openStatsModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 shadow-sm">
-                <i class="fa-solid fa-chart-simple"></i>
-            </button>
-            <button onclick="openModal('modal-settings')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 shadow-sm">
-                <i class="fa-solid fa-gear"></i>
-            </button>
-            <button id="theme-toggle" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 shadow-sm transition-transform active:scale-95">
-                <i class="fa-solid fa-moon dark:hidden"></i>
-                <i class="fa-solid fa-sun hidden dark:block"></i>
-            </button>
+    <header class="h-16 bg-white/70 dark:bg-stone-900/70 backdrop-blur-md border-b border-stone-200/50 dark:border-stone-800/50 z-20 shrink-0 sticky top-0">
+        <div class="w-full max-w-[1200px] mx-auto px-6 h-full flex items-center justify-between">
+            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                时光记录
+            </h1>
+            <div class="flex space-x-3">
+                <button onclick="toggleSearch()" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-600 dark:text-stone-300 shadow-sm">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                <button onclick="openStatsModal()" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-600 dark:text-stone-300 shadow-sm">
+                    <i class="fa-solid fa-chart-simple"></i>
+                </button>
+                <button onclick="openModal('modal-settings')" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-600 dark:text-stone-300 shadow-sm">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <button id="theme-toggle" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-600 dark:text-stone-300 shadow-sm transition-transform active:scale-95">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block"></i>
+                </button>
+            </div>
         </div>
     </header>
 
     <!-- Search Bar -->
-    <div id="search-bar" class="hidden mb-4 transition-all duration-300 origin-top">
-        <div class="relative">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-            <input type="text" id="search-input" placeholder="搜索标题..." class="w-full bg-gray-100 dark:bg-gray-800 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 dark:text-gray-200" oninput="handleSearch(this.value)">
-            <button onclick="toggleSearch()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+    <div id="search-bar" class="hidden transition-all duration-300 origin-top bg-[#F5F7FA] dark:bg-stone-900">
+        <div class="w-full max-w-[1200px] mx-auto px-6 py-4">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400"></i>
+                <input type="text" id="search-input" placeholder="搜索标题..." class="w-full bg-white dark:bg-stone-800 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 dark:text-stone-200 shadow-sm" oninput="handleSearch(this.value)">
+                <button onclick="toggleSearch()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-400">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -81,113 +78,232 @@
     <main class="flex-1 relative overflow-hidden">
         
         <!-- 页面1: 倒数日 -->
-        <div id="page-countdown" class="absolute inset-0 overflow-y-auto no-scrollbar p-4 space-y-4 pb-20 page-transition">
+        <div id="page-countdown" class="absolute inset-0 overflow-y-auto no-scrollbar py-6 pb-24 page-transition">
+            <div class="w-full max-w-[1200px] mx-auto px-6 space-y-6">
+                <!-- 倒数日列表容器 -->
+                <div id="countdown-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 动态生成内容 -->
+                </div>
+                
+                <div id="empty-countdown" class="hidden flex flex-col items-center justify-center h-64 text-stone-400">
+                    <div class="relative mb-6">
+                        <div class="absolute inset-0 bg-primary/10 rounded-full blur-xl scale-150"></div>
+                        <div class="relative bg-white dark:bg-stone-800 p-4 rounded-full shadow-sm">
+                            <svg class="w-16 h-16 text-primary/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-lg font-medium text-stone-600 dark:text-stone-300">暂无倒数日</p>
+                    <p class="text-sm mt-2 text-stone-400">美好的日子值得被记录</p>
+                    <button onclick="openModal('modal-add-countdown')" class="mt-4 text-primary text-sm font-bold hover:underline">去添加 <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                </div>
+            </div>
+
             <!-- 添加按钮 (悬浮) -->
             <button onclick="openModal('modal-add-countdown')" class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-600 active:scale-95 transition-all z-30">
                 <i class="fa-solid fa-plus text-xl"></i>
             </button>
-
-            <!-- 倒数日列表容器 -->
-            <div id="countdown-list" class="space-y-3">
-                <!-- 动态生成内容 -->
-            </div>
-            
-            <div id="empty-countdown" class="hidden flex flex-col items-center justify-center h-64 text-gray-400">
-                <div class="relative mb-6">
-                    <div class="absolute inset-0 bg-primary/10 rounded-full blur-xl scale-150"></div>
-                    <div class="relative bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm">
-                        <svg class="w-16 h-16 text-primary/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-lg font-medium text-gray-600 dark:text-gray-300">暂无倒数日</p>
-                <p class="text-sm mt-2 text-gray-400">美好的日子值得被记录</p>
-                <button onclick="openModal('modal-add-countdown')" class="mt-4 text-primary text-sm font-bold hover:underline">去添加 <i class="fa-solid fa-arrow-right ml-1"></i></button>
-            </div>
         </div>
 
         <!-- 页面2: 待办事项 -->
-        <div id="page-todo" class="absolute inset-0 overflow-y-auto no-scrollbar p-4 space-y-4 pb-20 page-transition translate-x-full opacity-0 pointer-events-none">
+        <div id="page-todo" class="absolute inset-0 overflow-y-auto no-scrollbar py-6 pb-24 page-transition translate-x-full opacity-0 pointer-events-none">
+            <div class="w-full max-w-[1200px] mx-auto px-6 space-y-6">
+                <!-- 分区导航 -->
+                <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar pb-2" id="partition-nav">
+                    <!-- 动态生成分区 -->
+                </div>
+
+                <!-- 待办列表容器 -->
+                <div id="todo-list" class="space-y-3">
+                    <!-- 动态生成内容 -->
+                </div>
+
+                <div id="empty-todo" class="hidden flex flex-col items-center justify-center h-64 text-stone-400">
+                    <div class="relative mb-6">
+                        <div class="absolute inset-0 bg-secondary/10 rounded-full blur-xl scale-150"></div>
+                        <div class="relative bg-white dark:bg-stone-800 p-4 rounded-full shadow-sm">
+                            <svg class="w-16 h-16 text-secondary/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 11l3 3L22 4"></path>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-lg font-medium text-stone-600 dark:text-stone-300">暂无待办事项</p>
+                    <p class="text-sm mt-2 text-stone-400">享受你的自由时光吧</p>
+                    <button onclick="openModal('modal-add-todo')" class="mt-4 text-secondary text-sm font-bold hover:underline">去添加 <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                </div>
+            </div>
+
              <!-- 添加按钮 (悬浮) -->
              <button onclick="openModal('modal-add-todo')" class="fixed bottom-24 right-6 w-14 h-14 bg-secondary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-pink-600 active:scale-95 transition-all z-30">
                 <i class="fa-solid fa-plus text-xl"></i>
             </button>
+        </div>
 
-            <!-- 分区导航 -->
-            <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar pb-2" id="partition-nav">
-                <!-- 动态生成分区 -->
-            </div>
+        <!-- 页面3: 专注番茄钟 -->
+        <div id="page-focus" class="absolute inset-0 overflow-y-auto no-scrollbar py-6 pb-24 page-transition translate-x-full opacity-0 pointer-events-none">
+            <div class="w-full max-w-[1200px] mx-auto px-6 space-y-6">
+                <!-- Timer Section -->
+                <div class="modern-card flex flex-col items-center justify-center min-h-[400px]">
+                    <!-- Mode Switcher -->
+                    <div class="absolute top-6 flex space-x-1 bg-stone-100 dark:bg-stone-700 p-1 rounded-full z-10">
+                         <button onclick="setFocusMode('pomodoro')" id="btn-mode-pomodoro" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white dark:bg-stone-600 shadow-sm text-primary">番茄钟</button>
+                         <button onclick="setFocusMode('stopwatch')" id="btn-mode-stopwatch" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all text-stone-500 dark:text-stone-400">正计时</button>
+                    </div>
 
-            <!-- 待办列表容器 -->
-            <div id="todo-list" class="space-y-3">
-                <!-- 动态生成内容 -->
-            </div>
-
-            <div id="empty-todo" class="hidden flex flex-col items-center justify-center h-64 text-gray-400">
-                <div class="relative mb-6">
-                    <div class="absolute inset-0 bg-secondary/10 rounded-full blur-xl scale-150"></div>
-                    <div class="relative bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm">
-                        <svg class="w-16 h-16 text-secondary/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 11l3 3L22 4"></path>
-                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    <!-- Timer Circle -->
+                    <div class="relative w-64 h-64 mt-8 mb-8">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="128" cy="128" r="120" class="timer-circle-bg"></circle>
+                            <circle cx="128" cy="128" r="120" class="timer-circle-progress" id="timer-progress" stroke-dasharray="753.98" stroke-dashoffset="0"></circle>
                         </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span id="timer-display" class="text-6xl font-mono font-bold text-stone-800 dark:text-stone-100 tracking-wider">25:00</span>
+                            <button id="focus-task-select" onclick="openFocusTaskSelect()" class="mt-4 text-sm text-stone-500 bg-stone-100 dark:bg-stone-700/50 px-4 py-1.5 rounded-full hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors max-w-[200px] truncate flex items-center">
+                                <i class="fa-solid fa-tag mr-2 text-xs"></i> <span id="current-focus-task">选择关联任务</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="flex items-center space-x-8 z-10">
+                         <button onclick="resetTimer()" class="w-12 h-12 rounded-full bg-stone-100 dark:bg-stone-700 text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-600 flex items-center justify-center transition-colors">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                        <button onclick="toggleTimer()" id="btn-timer-toggle" class="w-20 h-20 rounded-full bg-primary text-white shadow-lg shadow-primary/40 flex items-center justify-center text-3xl hover:scale-105 active:scale-95 transition-all">
+                            <i class="fa-solid fa-play ml-1"></i>
+                        </button>
+                         <button onclick="stopTimer()" class="w-12 h-12 rounded-full bg-stone-100 dark:bg-stone-700 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 flex items-center justify-center transition-colors">
+                            <i class="fa-solid fa-stop"></i>
+                        </button>
                     </div>
                 </div>
-                <p class="text-lg font-medium text-gray-600 dark:text-gray-300">暂无待办事项</p>
-                <p class="text-sm mt-2 text-gray-400">享受你的自由时光吧</p>
-                <button onclick="openModal('modal-add-todo')" class="mt-4 text-secondary text-sm font-bold hover:underline">去添加 <i class="fa-solid fa-arrow-right ml-1"></i></button>
+
+                <!-- Stats Preview -->
+                <div class="modern-card grid grid-cols-2 gap-8 items-center justify-items-center">
+                    <div class="text-center">
+                        <p class="text-xs text-stone-400 mb-1 font-medium uppercase tracking-wider">今日专注</p>
+                        <p class="text-2xl font-bold text-stone-800 dark:text-stone-100" id="stats-today-total">0m</p>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-px h-8 bg-stone-200 dark:bg-stone-700 -ml-4"></div>
+                        <div class="text-center">
+                             <p class="text-xs text-stone-400 mb-1 font-medium uppercase tracking-wider">日均时长</p>
+                             <p class="text-2xl font-bold text-stone-800 dark:text-stone-100" id="stats-daily-avg">0m</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity / Rankings -->
+                <div class="modern-card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-stone-800 dark:text-stone-100">专注排行</h3>
+                        <select id="rank-filter" onchange="renderFocusRankings(this.value)" class="text-xs bg-stone-100 dark:bg-stone-700 rounded-lg px-2 py-1 outline-none border-none">
+                            <option value="day">今日</option>
+                            <option value="week">本周</option>
+                            <option value="month">本月</option>
+                        </select>
+                    </div>
+                    <div id="focus-rankings-list" class="space-y-3">
+                         <!-- Dynamic Content -->
+                    </div>
+                </div>
             </div>
         </div>
 
     </main>
 
     <!-- 底部导航栏 -->
-    <nav class="h-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-800/50 flex items-center justify-around shrink-0 z-20 pb-4">
-        <button onclick="switchTab('countdown')" id="nav-countdown" class="flex flex-col items-center space-y-1 text-primary w-full h-full justify-center active:scale-95 transition-transform duration-200 group">
-            <div class="relative p-2 rounded-2xl group-hover:bg-primary/5 dark:group-hover:bg-primary/20 transition-colors">
-                <i class="fa-solid fa-clock text-xl mb-0.5"></i>
-            </div>
-            <span class="text-[10px] font-bold">倒数日</span>
-        </button>
-        <button onclick="switchTab('todo')" id="nav-todo" class="flex flex-col items-center space-y-1 text-gray-400 w-full h-full justify-center active:scale-95 transition-transform duration-200 group">
-             <div class="relative p-2 rounded-2xl group-hover:bg-secondary/5 dark:group-hover:bg-secondary/20 transition-colors">
-                <i class="fa-solid fa-list-check text-xl mb-0.5"></i>
-            </div>
-            <span class="text-[10px] font-bold">待办</span>
-        </button>
+    <nav class="fixed bottom-4 left-0 right-0 mx-auto w-[calc(100%-2rem)] max-w-[1200px] h-16 bg-white/80 dark:bg-stone-900/80 backdrop-blur-xl border border-white/20 dark:border-stone-700 rounded-2xl shadow-xl z-40 flex items-center justify-around pb-0 mb-safe">
+        <button onclick="switchTab('countdown')" id="nav-countdown" class="flex flex-col items-center justify-center space-y-1 text-primary w-full h-full active:scale-95 transition-transform duration-200 group rounded-l-2xl">
+                <div class="relative p-2 rounded-2xl group-hover:bg-primary/5 dark:group-hover:bg-primary/20 transition-colors">
+                    <i class="fa-solid fa-clock text-xl mb-0.5"></i>
+                </div>
+                <span class="text-[10px] font-bold">倒数日</span>
+            </button>
+            <button onclick="switchTab('todo')" id="nav-todo" class="flex flex-col items-center space-y-1 text-stone-400 w-full h-full justify-center active:scale-95 transition-transform duration-200 group">
+                 <div class="relative p-2 rounded-2xl group-hover:bg-secondary/5 dark:group-hover:bg-secondary/20 transition-colors">
+                    <i class="fa-solid fa-list-check text-xl mb-0.5"></i>
+                </div>
+                <span class="text-[10px] font-bold">待办</span>
+            </button>
+        <button onclick="switchTab('focus')" id="nav-focus" class="flex flex-col items-center justify-center space-y-1 text-stone-400 w-full h-full active:scale-95 transition-transform duration-200 group rounded-r-2xl">
+                <div class="relative p-2 rounded-2xl group-hover:bg-primary/5 dark:group-hover:bg-primary/20 transition-colors">
+                    <i class="fa-solid fa-hourglass-half text-xl mb-0.5"></i>
+                </div>
+                <span class="text-[10px] font-bold">专注</span>
+            </button>
     </nav>
+
+    <!-- 模态框: 专注任务选择 -->
+    <div id="modal-focus-task" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-stone-800 w-80 sm:w-96 rounded-2xl p-6 shadow-2xl max-h-[80vh] flex flex-col">
+            <h3 class="font-bold text-lg mb-4 dark:text-stone-100">选择专注任务</h3>
+            
+            <div class="flex-1 overflow-y-auto no-scrollbar space-y-6">
+                <!-- 常用专注 -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                         <h4 class="text-xs font-bold text-stone-400 uppercase">常用专注</h4>
+                    </div>
+                    <div class="flex space-x-2 mb-3">
+                        <input type="text" id="new-focus-task-input" placeholder="添加新任务..." class="flex-1 bg-stone-100 dark:bg-stone-700 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary dark:text-stone-200">
+                        <button onclick="addFocusPreset()" class="bg-primary text-white w-10 rounded-lg flex items-center justify-center hover:bg-indigo-600 transition-colors">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="focus-presets-list" class="space-y-2">
+                        <!-- Dynamic Presets -->
+                    </div>
+                </div>
+
+                <!-- 待办任务 -->
+                <div>
+                    <h4 class="text-xs font-bold text-stone-400 uppercase mb-2">待办清单</h4>
+                    <div id="focus-task-list" class="space-y-2">
+                        <!-- Dynamic Todos -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-stone-100 dark:border-stone-700">
+                <button onclick="selectFocusTask(null)" class="w-full py-2 border border-stone-200 dark:border-stone-600 rounded-lg text-sm text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors">不关联任务</button>
+                <button onclick="closeModal('modal-focus-task')" class="w-full mt-2 py-2 bg-stone-100 dark:bg-stone-700 rounded-lg text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">取消</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 模态框: 添加倒数日 -->
     <div id="modal-add-countdown" class="fixed inset-0 bg-black/40 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 w-full sm:w-96 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl modal-content transform transition-all duration-300 translate-y-full sm:translate-y-0 border border-gray-100 dark:border-gray-700">
+        <div class="bg-white dark:bg-stone-800 w-full sm:w-96 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl modal-content transform transition-all duration-300 translate-y-full sm:translate-y-0 border border-stone-100 dark:border-stone-700">
             <!-- Handle bar -->
-            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6 sm:hidden"></div>
+            <div class="w-12 h-1.5 bg-stone-300 dark:bg-stone-600 rounded-full mx-auto mb-6 sm:hidden"></div>
             
             <h2 class="text-xl font-bold mb-4">新建倒数日</h2>
             <form onsubmit="handleCountdownSubmit(event)" class="space-y-4">
                 <div>
-                    <label class="block text-sm text-gray-500 mb-1">事件名称 <span class="text-red-500">*</span></label>
-                    <input type="text" name="title" required class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary" placeholder="例如：期末考试">
+                    <label class="block text-sm text-stone-500 mb-1">事件名称 <span class="text-red-500">*</span></label>
+                    <input type="text" name="title" required class="w-full bg-stone-100 dark:bg-stone-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary" placeholder="例如：期末考试">
                 </div>
                 
                 <!-- Count Up Mode Toggle -->
-                <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                <div class="flex items-center justify-between bg-stone-50 dark:bg-stone-700/50 p-3 rounded-lg">
                     <div>
                         <span class="text-sm font-bold block">正数日模式</span>
-                        <span class="text-xs text-gray-400">用于记录“已经开始多少天”（如纪念日）</span>
+                        <span class="text-xs text-stone-400">用于记录“已经开始多少天”（如纪念日）</span>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" name="countUpMode" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        <div class="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm text-gray-500 mb-1">类型</label>
-                        <select name="type" class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 outline-none">
+                        <label class="block text-sm text-stone-500 mb-1">类型</label>
+                        <select name="type" class="w-full bg-stone-100 dark:bg-stone-700 rounded-lg p-3 outline-none">
                             <option value="anniversary">纪念日</option>
                             <option value="exam">考试</option>
                             <option value="birthday">生日</option>
@@ -196,8 +312,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-500 mb-1">重复</label>
-                        <select name="repeat" class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 outline-none">
+                        <label class="block text-sm text-stone-500 mb-1">重复</label>
+                        <select name="repeat" class="w-full bg-stone-100 dark:bg-stone-700 rounded-lg p-3 outline-none">
                             <option value="none">不重复</option>
                             <option value="yearly">每年</option>
                             <option value="monthly">每月</option>
@@ -206,24 +322,25 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-500 mb-1">颜色</label>
+                    <label class="block text-sm text-stone-500 mb-1">颜色</label>
                     <div class="flex space-x-2 mt-2">
-                            <input type="radio" name="color" value="blue" class="w-6 h-6 text-blue-500 focus:ring-blue-500" checked>
-                            <input type="radio" name="color" value="red" class="w-6 h-6 text-red-500 focus:ring-red-500">
-                            <input type="radio" name="color" value="green" class="w-6 h-6 text-green-500 focus:ring-green-500">
-                            <input type="radio" name="color" value="purple" class="w-6 h-6 text-purple-500 focus:ring-purple-500">
-                        </div>
+                        <input type="radio" name="color" value="orange" class="w-6 h-6 text-orange-500 focus:ring-orange-500" checked>
+                        <input type="radio" name="color" value="red" class="w-6 h-6 text-red-500 focus:ring-red-500">
+                        <input type="radio" name="color" value="blue" class="w-6 h-6 text-blue-500 focus:ring-blue-500">
+                        <input type="radio" name="color" value="green" class="w-6 h-6 text-green-500 focus:ring-green-500">
+                        <input type="radio" name="color" value="purple" class="w-6 h-6 text-purple-500 focus:ring-purple-500">
+                    </div>
                     </div>
                 <div>
-                    <label class="block text-sm text-gray-500 mb-1">目标时间</label>
-                    <input type="datetime-local" name="targetDate" required class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 outline-none">
+                    <label class="block text-sm text-stone-500 mb-1">目标时间</label>
+                    <input type="datetime-local" name="targetDate" required class="w-full bg-stone-100 dark:bg-stone-700 rounded-lg p-3 outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-500 mb-1">背景图片 (可选)</label>
-                    <input type="file" id="countdown-bg-file" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20">
+                    <label class="block text-sm text-stone-500 mb-1">背景图片 (可选)</label>
+                    <input type="file" id="countdown-bg-file" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20">
                 </div>
                 <div class="flex space-x-3 mt-6">
-                    <button type="button" onclick="closeModal('modal-add-countdown')" class="flex-1 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 font-medium">取消</button>
+                    <button type="button" onclick="closeModal('modal-add-countdown')" class="flex-1 py-3 rounded-lg bg-stone-200 dark:bg-stone-700 font-medium">取消</button>
                     <button type="submit" class="flex-1 py-3 rounded-lg bg-primary text-white font-medium shadow-lg shadow-primary/30">创建</button>
                 </div>
             </form>
@@ -232,30 +349,30 @@
 
     <!-- 模态框: 添加待办 -->
     <div id="modal-add-todo" class="fixed inset-0 bg-black/40 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 w-full sm:w-96 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl modal-content transform transition-all duration-300 translate-y-full sm:translate-y-0 border border-gray-100 dark:border-gray-700">
+        <div class="bg-white dark:bg-stone-800 w-full sm:w-96 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl modal-content transform transition-all duration-300 translate-y-full sm:translate-y-0 border border-stone-100 dark:border-stone-700">
              <!-- Handle bar -->
-            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6 sm:hidden"></div>
+            <div class="w-12 h-1.5 bg-stone-300 dark:bg-stone-600 rounded-full mx-auto mb-6 sm:hidden"></div>
             
             <h2 class="text-xl font-bold mb-4">新建待办事项</h2>
             <form onsubmit="handleTodoSubmit(event)" class="space-y-4">
                 <div>
-                    <label class="block text-sm text-gray-500 mb-1">事项标题 <span class="text-red-500">*</span></label>
-                    <input type="text" name="title" required class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-secondary" placeholder="例如：完成项目报告">
+                    <label class="block text-sm text-stone-500 mb-1">事项标题 <span class="text-red-500">*</span></label>
+                    <input type="text" name="title" required class="w-full bg-stone-100 dark:bg-stone-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-secondary" placeholder="例如：完成项目报告">
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-500 mb-1">截止时间</label>
-                    <input type="datetime-local" name="deadline" class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 outline-none">
+                    <label class="block text-sm text-stone-500 mb-1">截止时间</label>
+                    <input type="datetime-local" name="deadline" class="w-full bg-stone-100 dark:bg-stone-700 rounded-lg p-3 outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-500 mb-1">初始进度: <span id="progress-val">0</span>%</label>
-                    <input type="range" name="progress" min="0" max="100" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary" oninput="document.getElementById('progress-val').innerText = this.value">
+                    <label class="block text-sm text-stone-500 mb-1">初始进度: <span id="progress-val">0</span>%</label>
+                    <input type="range" name="progress" min="0" max="100" value="0" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-secondary" oninput="document.getElementById('progress-val').innerText = this.value">
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-500 mb-1">详细说明</label>
-                    <textarea name="description" rows="3" class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 outline-none resize-none"></textarea>
+                    <label class="block text-sm text-stone-500 mb-1">详细说明</label>
+                    <textarea name="description" rows="3" class="w-full bg-stone-100 dark:bg-stone-700 rounded-lg p-3 outline-none resize-none"></textarea>
                 </div>
                 <div class="flex space-x-3 mt-6">
-                    <button type="button" onclick="closeModal('modal-add-todo')" class="flex-1 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 font-medium">取消</button>
+                    <button type="button" onclick="closeModal('modal-add-todo')" class="flex-1 py-3 rounded-lg bg-stone-200 dark:bg-stone-700 font-medium">取消</button>
                     <button type="submit" class="flex-1 py-3 rounded-lg bg-secondary text-white font-medium shadow-lg shadow-secondary/30">创建</button>
                 </div>
             </form>
@@ -264,36 +381,36 @@
 
     <!-- 模态框: 添加/管理分区 -->
     <div id="modal-manage-partition" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 w-80 rounded-2xl p-6 shadow-2xl">
+        <div class="bg-white dark:bg-stone-800 w-80 rounded-2xl p-6 shadow-2xl">
             <h3 class="font-bold text-lg mb-4">管理分区</h3>
             <div class="flex space-x-2 mb-4">
-                <input type="text" id="new-partition-name" placeholder="新分区名称" class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-2 text-sm outline-none">
-                <button onclick="addPartition()" class="bg-gray-800 dark:bg-gray-600 text-white px-3 rounded-lg text-sm">添加</button>
+                <input type="text" id="new-partition-name" placeholder="新分区名称" class="flex-1 bg-stone-100 dark:bg-stone-700 rounded-lg p-2 text-sm outline-none">
+                <button onclick="addPartition()" class="bg-stone-800 dark:bg-stone-600 text-white px-3 rounded-lg text-sm">添加</button>
             </div>
             <div id="partition-manage-list" class="space-y-2 max-h-40 overflow-y-auto">
                 <!-- 动态列表 -->
             </div>
-            <button onclick="closeModal('modal-manage-partition')" class="w-full mt-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm">关闭</button>
+            <button onclick="closeModal('modal-manage-partition')" class="w-full mt-4 py-2 bg-stone-200 dark:bg-stone-700 rounded-lg text-sm">关闭</button>
         </div>
     </div>
 
     <!-- 模态框: 待办详情 & 图表 -->
     <div id="modal-todo-detail" class="fixed inset-0 bg-black/40 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 w-full sm:w-[500px] h-[90vh] sm:h-auto rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl modal-content transform transition-all duration-300 translate-y-full sm:translate-y-0 flex flex-col border border-gray-100 dark:border-gray-700">
+        <div class="bg-white dark:bg-stone-800 w-full sm:w-[500px] h-[90vh] sm:h-auto rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl modal-content transform transition-all duration-300 translate-y-full sm:translate-y-0 flex flex-col border border-stone-100 dark:border-stone-700">
              <!-- Handle bar -->
-            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6 sm:hidden shrink-0"></div>
+            <div class="w-12 h-1.5 bg-stone-300 dark:bg-stone-600 rounded-full mx-auto mb-6 sm:hidden shrink-0"></div>
 
             <div class="flex justify-between items-start mb-4 shrink-0">
-                <h2 id="detail-title" class="text-2xl font-bold text-gray-800 dark:text-white truncate pr-4"></h2>
-                <button onclick="closeModal('modal-todo-detail')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h2 id="detail-title" class="text-2xl font-bold text-stone-800 dark:text-white truncate pr-4"></h2>
+                <button onclick="closeModal('modal-todo-detail')" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
             <div class="overflow-y-auto flex-1 no-scrollbar space-y-6">
                 <!-- 基本信息 -->
-                <div class="grid grid-cols-2 gap-4 text-sm text-gray-500">
+                <div class="grid grid-cols-2 gap-4 text-sm text-stone-500">
                     <div>
                         <p class="mb-1">截止时间</p>
-                        <p id="detail-deadline" class="font-medium text-gray-800 dark:text-gray-200">-</p>
+                        <p id="detail-deadline" class="font-medium text-stone-800 dark:text-stone-200">-</p>
                     </div>
                     <div>
                         <p class="mb-1">当前进度</p>
@@ -302,18 +419,18 @@
                 </div>
 
                 <!-- 说明 -->
-                <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                    <p class="text-xs text-gray-400 mb-1">详细说明</p>
-                    <p id="detail-desc" class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">无说明</p>
+                <div class="bg-stone-50 dark:bg-stone-700/50 p-3 rounded-lg">
+                    <p class="text-xs text-stone-400 mb-1">详细说明</p>
+                    <p id="detail-desc" class="text-sm text-stone-700 dark:text-stone-300 whitespace-pre-wrap">无说明</p>
                 </div>
 
                 <!-- 子任务 -->
-                <div class="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div class="bg-stone-50 dark:bg-stone-700/30 p-4 rounded-xl border border-stone-100 dark:border-stone-700">
                     <h3 class="font-bold mb-3 text-sm flex items-center">
                         <i class="fa-solid fa-list-ul mr-2 text-secondary"></i>子任务
                     </h3>
                     <div class="flex space-x-2 mb-3">
-                        <input type="text" id="new-subtask" placeholder="添加子任务..." class="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-secondary">
+                        <input type="text" id="new-subtask" placeholder="添加子任务..." class="flex-1 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-600 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-secondary">
                         <button onclick="addSubtask()" class="bg-secondary text-white px-3 rounded-lg text-sm"><i class="fa-solid fa-plus"></i></button>
                     </div>
                     <div id="subtask-list" class="space-y-2">
@@ -322,14 +439,14 @@
                 </div>
 
                 <!-- 进度更新 -->
-                <div class="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div class="bg-stone-50 dark:bg-stone-700/30 p-4 rounded-xl border border-stone-100 dark:border-stone-700">
                     <h3 class="font-bold mb-3 text-sm flex items-center"><i class="fa-solid fa-pen-to-square mr-2 text-secondary"></i>更新进度</h3>
                     <div class="flex items-center space-x-3 mb-3">
-                        <input type="range" id="detail-slider" min="0" max="100" class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary">
+                        <input type="range" id="detail-slider" min="0" max="100" class="flex-1 h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-secondary">
                         <span id="detail-slider-val" class="w-10 text-right text-sm font-bold text-secondary">0%</span>
                     </div>
                     <div class="flex space-x-2">
-                        <select id="progress-tag" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-secondary w-24">
+                        <select id="progress-tag" class="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-600 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-secondary w-24">
                             <option value="">无标签</option>
                             <option value="Fix">Fix</option>
                             <option value="Feat">Feat</option>
@@ -339,7 +456,7 @@
                             <option value="Test">Test</option>
                             <option value="Chore">Chore</option>
                         </select>
-                        <input type="text" id="progress-note" placeholder="完成了什么？(Commit message)" class="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-secondary">
+                        <input type="text" id="progress-note" placeholder="完成了什么？(Commit message)" class="flex-1 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-600 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-secondary">
                         <button onclick="updateTodoProgress()" class="bg-secondary text-white px-4 py-2 rounded-lg text-sm shadow-md hover:bg-pink-600 transition-colors">提交</button>
                     </div>
                 </div>
@@ -347,7 +464,7 @@
                 <!-- 图表 -->
                 <div>
                     <h3 class="font-bold mb-2 text-sm">进度趋势</h3>
-                    <div class="bg-white dark:bg-gray-700 p-2 rounded-xl border border-gray-100 dark:border-gray-600 h-40">
+                    <div class="bg-white dark:bg-stone-700 p-2 rounded-xl border border-stone-100 dark:border-stone-600 h-40">
                         <canvas id="progressChart"></canvas>
                     </div>
                 </div>
@@ -355,7 +472,7 @@
                 <!-- 进度日志 (Git Commit Style) -->
                 <div>
                     <h3 class="font-bold mb-3 text-sm">进度日志</h3>
-                    <div id="history-list" class="space-y-0 relative border-l-2 border-gray-200 dark:border-gray-700 ml-2 pl-6 pb-2">
+                    <div id="history-list" class="space-y-0 relative border-l-2 border-stone-200 dark:border-stone-700 ml-2 pl-6 pb-2">
                         <!-- 动态生成 -->
                     </div>
                 </div>
@@ -365,19 +482,19 @@
 
     <!-- 模态框: 统计 -->
     <div id="modal-stats" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 w-full sm:w-[600px] rounded-2xl p-6 shadow-2xl modal-content">
+        <div class="bg-white dark:bg-stone-800 w-full sm:w-[600px] rounded-2xl p-6 shadow-2xl modal-content">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-lg text-gray-800 dark:text-white"><i class="fa-solid fa-calendar-check mr-2 text-green-500"></i>贡献热力图</h3>
-                <button onclick="closeModal('modal-stats')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 class="font-bold text-lg text-stone-800 dark:text-white"><i class="fa-solid fa-calendar-check mr-2 text-green-500"></i>贡献热力图</h3>
+                <button onclick="closeModal('modal-stats')" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="overflow-x-auto pb-2">
                 <div id="heatmap-container" class="min-w-[500px]">
                     <!-- Heatmap Grid -->
                 </div>
             </div>
-            <div class="mt-4 flex items-center justify-end text-xs text-gray-500 space-x-2">
+            <div class="mt-4 flex items-center justify-end text-xs text-stone-500 space-x-2">
                 <span>Less</span>
-                <div class="w-3 h-3 bg-gray-100 dark:bg-gray-700 rounded-sm"></div>
+                <div class="w-3 h-3 bg-stone-100 dark:bg-stone-700 rounded-sm"></div>
                 <div class="w-3 h-3 bg-green-200 rounded-sm"></div>
                 <div class="w-3 h-3 bg-green-400 rounded-sm"></div>
                 <div class="w-3 h-3 bg-green-600 rounded-sm"></div>
@@ -389,53 +506,53 @@
 
     <!-- 模态框: 归档列表 -->
     <div id="modal-archive" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 w-80 rounded-2xl p-6 shadow-2xl max-h-[80vh] flex flex-col">
+        <div class="bg-white dark:bg-stone-800 w-80 rounded-2xl p-6 shadow-2xl max-h-[80vh] flex flex-col">
             <h3 class="font-bold text-lg mb-4">已归档倒数日</h3>
             <div id="archive-list" class="flex-1 overflow-y-auto space-y-2 min-h-[100px]">
                 <!-- 动态列表 -->
             </div>
-            <button onclick="closeModal('modal-archive')" class="w-full mt-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm">关闭</button>
+            <button onclick="closeModal('modal-archive')" class="w-full mt-4 py-2 bg-stone-200 dark:bg-stone-700 rounded-lg text-sm">关闭</button>
         </div>
     </div>
 
     <!-- 模态框: 设置 -->
     <div id="modal-settings" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 w-80 rounded-2xl p-6 shadow-2xl">
+        <div class="bg-white dark:bg-stone-800 w-80 rounded-2xl p-6 shadow-2xl">
             <h3 class="font-bold text-lg mb-6 text-center">设置</h3>
             
             <div class="space-y-3">
-                <button onclick="openArchiveModal(); closeModal('modal-settings')" class="w-full py-3 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-between px-4 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <button onclick="openArchiveModal(); closeModal('modal-settings')" class="w-full py-3 bg-stone-100 dark:bg-stone-700 rounded-xl flex items-center justify-between px-4 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">
                     <span class="text-sm font-medium"><i class="fa-solid fa-box-archive mr-2 text-primary"></i>归档箱</span>
-                    <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+                    <i class="fa-solid fa-chevron-right text-xs text-stone-400"></i>
                 </button>
                 
-                <button onclick="exportData()" class="w-full py-3 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-between px-4 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <button onclick="exportData()" class="w-full py-3 bg-stone-100 dark:bg-stone-700 rounded-xl flex items-center justify-between px-4 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">
                     <span class="text-sm font-medium"><i class="fa-solid fa-file-export mr-2 text-blue-500"></i>导出数据 (JSON)</span>
-                    <i class="fa-solid fa-download text-xs text-gray-400"></i>
+                    <i class="fa-solid fa-download text-xs text-stone-400"></i>
                 </button>
                 
-                <button onclick="document.getElementById('import-file').click()" class="w-full py-3 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-between px-4 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <button onclick="document.getElementById('import-file').click()" class="w-full py-3 bg-stone-100 dark:bg-stone-700 rounded-xl flex items-center justify-between px-4 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">
                     <span class="text-sm font-medium"><i class="fa-solid fa-file-import mr-2 text-green-500"></i>导入数据</span>
-                    <i class="fa-solid fa-upload text-xs text-gray-400"></i>
+                    <i class="fa-solid fa-upload text-xs text-stone-400"></i>
                 </button>
                 <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(this)">
                 
                 <!-- Notification Toggle -->
-                <div class="w-full py-3 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-between px-4">
+                <div class="w-full py-3 bg-stone-100 dark:bg-stone-700 rounded-xl flex items-center justify-between px-4">
                      <span class="text-sm font-medium"><i class="fa-solid fa-bell mr-2 text-yellow-500"></i>通知提醒</span>
                      <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="notification-toggle" class="sr-only peer" onchange="toggleNotifications(this)">
-                        <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
+                        <div class="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer dark:bg-stone-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
                     </label>
                 </div>
             </div>
 
-            <button onclick="closeModal('modal-settings')" class="w-full mt-6 py-2 text-gray-400 text-sm hover:text-gray-600">关闭</button>
+            <button onclick="closeModal('modal-settings')" class="w-full mt-6 py-2 text-stone-400 text-sm hover:text-stone-600">关闭</button>
         </div>
     </div>
 
     <!-- 提示框 Toast -->
-    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg text-sm z-[100] opacity-0 transition-opacity duration-300 pointer-events-none flex items-center space-x-2">
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-stone-800 text-white px-4 py-2 rounded-full shadow-lg text-sm z-[100] opacity-0 transition-opacity duration-300 pointer-events-none flex items-center space-x-2">
         <i class="fa-solid fa-circle-info"></i>
         <span id="toast-msg">操作成功</span>
     </div>
