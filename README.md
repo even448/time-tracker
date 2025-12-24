@@ -3,7 +3,6 @@
 一个现代化、高颜值的个人时间管理工具，集成了倒数日记录与待办事项管理功能。支持 PWA，可作为原生应用安装到手机或桌面。
 
 ![App Screenshot](https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&q=80&w=2072&ixlib=rb-4.0.3)
-*(注：此处可替换为实际的应用截图)*
 
 ## ✨ 主要功能
 
@@ -59,5 +58,4 @@
 3.  **数据备份**：点击右上角齿轮图标 ⚙️，选择“导出”即可下载 JSON 数据备份。
 
 ## 📄 License
-
 MIT License. 欢迎自由修改和使用。
