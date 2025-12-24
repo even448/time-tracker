@@ -146,15 +146,15 @@
         <div id="page-focus" class="absolute inset-0 overflow-y-auto no-scrollbar py-6 pb-24 page-transition translate-x-full opacity-0 pointer-events-none">
             <div class="w-full max-w-[1200px] mx-auto px-6 space-y-6">
                 <!-- Timer Section -->
-                <div class="modern-card flex flex-col items-center justify-center min-h-[400px]">
+                <div class="modern-card flex flex-col items-center justify-center min-h-[400px] py-8">
                     <!-- Mode Switcher -->
-                    <div class="absolute top-6 flex space-x-1 bg-stone-100 dark:bg-stone-700 p-1 rounded-full z-10">
+                    <div class="flex space-x-1 bg-stone-100 dark:bg-stone-700 p-1 rounded-full z-10 mb-8">
                          <button onclick="setFocusMode('pomodoro')" id="btn-mode-pomodoro" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white dark:bg-stone-600 shadow-sm text-primary">番茄钟</button>
                          <button onclick="setFocusMode('stopwatch')" id="btn-mode-stopwatch" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all text-stone-500 dark:text-stone-400">正计时</button>
                     </div>
 
                     <!-- Timer Circle -->
-                    <div class="relative w-64 h-64 mt-8 mb-8">
+                    <div class="relative w-64 h-64 mb-8">
                         <svg class="w-full h-full transform -rotate-90">
                             <circle cx="128" cy="128" r="120" class="timer-circle-bg"></circle>
                             <circle cx="128" cy="128" r="120" class="timer-circle-progress" id="timer-progress" stroke-dasharray="753.98" stroke-dashoffset="0"></circle>
@@ -250,6 +250,10 @@
                     </div>
                     <div class="flex space-x-2 mb-3">
                         <input type="text" id="new-focus-task-input" placeholder="添加新任务..." class="flex-1 bg-stone-100 dark:bg-stone-700 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary dark:text-stone-200">
+                        <div class="relative w-20">
+                             <input type="number" id="new-focus-task-duration" placeholder="25" min="1" max="180" class="w-full bg-stone-100 dark:bg-stone-700 rounded-lg pl-2 pr-6 py-2 text-sm outline-none focus:ring-2 focus:ring-primary dark:text-stone-200 text-center" title="番茄钟时长(分钟)">
+                             <span class="absolute right-2 top-2 text-xs text-stone-400 pointer-events-none">m</span>
+                        </div>
                         <button onclick="addFocusPreset()" class="bg-primary text-white w-10 rounded-lg flex items-center justify-center hover:bg-indigo-600 transition-colors">
                             <i class="fa-solid fa-plus"></i>
                         </button>

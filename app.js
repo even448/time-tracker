@@ -555,8 +555,11 @@ function setFocusMode(mode) {
     const btnS = document.getElementById('btn-mode-stopwatch');
     
     if (mode === 'pomodoro') {
-        focusTimer.timeLeft = 25 * 60;
-        focusTimer.totalTime = 25 * 60;
+        const defaultDuration = (focusTimer.currentTask && focusTimer.currentTask.duration) 
+            ? focusTimer.currentTask.duration * 60 
+            : 25 * 60;
+        focusTimer.timeLeft = defaultDuration;
+        focusTimer.totalTime = defaultDuration;
         btnP.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white dark:bg-stone-600 shadow-sm text-primary';
         btnS.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all text-stone-500 dark:text-stone-400';
     } else {
@@ -632,7 +635,12 @@ function stopTimer(save = true) {
     
     // Reset to initial state
     if (focusTimer.mode === 'pomodoro') {
-        focusTimer.timeLeft = 25 * 60;
+        const defaultDuration = (focusTimer.currentTask && focusTimer.currentTask.duration) 
+            ? focusTimer.currentTask.duration * 60 
+            : 25 * 60;
+        focusTimer.timeLeft = defaultDuration;
+        // Ensure totalTime is synced (though usually it is, but if changed dynamically)
+        focusTimer.totalTime = defaultDuration;
     } else {
         focusTimer.elapsed = 0;
     }
@@ -708,7 +716,10 @@ function renderFocusPresets() {
                 <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                     <i class="fa-solid fa-bolt"></i>
                 </div>
-                <span class="font-medium text-stone-700 dark:text-stone-200">${task.title}</span>
+                <div>
+                    <span class="font-medium text-stone-700 dark:text-stone-200">${task.title}</span>
+                    <span class="text-xs text-stone-400 ml-2 bg-stone-100 dark:bg-stone-600 px-1.5 py-0.5 rounded">${task.duration || 25}m</span>
+                </div>
             </div>
             <button onclick="event.stopPropagation(); deleteFocusPreset('${task.id}')" class="text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2">
                 <i class="fa-solid fa-trash"></i>
@@ -719,18 +730,23 @@ function renderFocusPresets() {
 
 function addFocusPreset() {
     const input = document.getElementById('new-focus-task-input');
+    const durationInput = document.getElementById('new-focus-task-duration');
     const title = input.value.trim();
     if (!title) return;
     
+    const duration = parseInt(durationInput.value) || 25;
+
     const newTask = {
         id: 'fp-' + Date.now(),
-        title: title
+        title: title,
+        duration: duration
     };
     
     appData.focusTasks.push(newTask);
     saveData();
     renderFocusPresets();
     input.value = '';
+    durationInput.value = '';
     showToast('已添加常用专注');
 }
 
@@ -745,7 +761,7 @@ function deleteFocusPreset(id) {
 // Modify selectFocusTask to handle object or id
 function selectFocusTask(taskOrId) {
     if (taskOrId && typeof taskOrId === 'object') {
-        // Direct object passed (legacy or future use)
+        // Direct object passed
         focusTimer.currentTask = { id: taskOrId.id, title: taskOrId.title };
         document.getElementById('current-focus-task').textContent = taskOrId.title;
         closeModal('modal-focus-task');
@@ -759,6 +775,13 @@ function selectFocusTask(taskOrId) {
         if (task) {
             focusTimer.currentTask = { id: task.id, title: task.title };
             document.getElementById('current-focus-task').textContent = task.title;
+
+            // Update timer if task has custom duration and not running
+            if (task.duration && focusTimer.mode === 'pomodoro' && !focusTimer.isRunning) {
+                focusTimer.totalTime = task.duration * 60;
+                focusTimer.timeLeft = focusTimer.totalTime;
+                updateTimerDisplay();
+            }
         }
         closeModal('modal-focus-task');
     } else {
