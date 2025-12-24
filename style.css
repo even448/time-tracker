@@ -60,4 +60,75 @@
 body {
     -webkit-tap-highlight-color: transparent;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f2f5;
+}
+
+/* Skeuomorphic Calendar Card Styles */
+.skeuomorphic-card {
+    background: #fdfdfd;
+    background-image: linear-gradient(#fdfdfd 0%, #f4f4f4 100%);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 10px 15px -3px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    position: relative;
+    overflow: visible !important; /* Allow rings to stick out */
+    border: 1px solid #e5e7eb;
+}
+
+/* Dark mode adjustment for card */
+.dark .skeuomorphic-card {
+    background: #1f2937;
+    background-image: linear-gradient(#1f2937 0%, #111827 100%);
+    border-color: #374151;
+}
+
+/* Top colored bar of the calendar */
+.calendar-top {
+    height: 40px;
+    border-radius: 12px 12px 0 0;
+    position: relative;
+    background: linear-gradient(to bottom, var(--tw-gradient-from), var(--tw-gradient-to));
+    box-shadow: inset 0 -1px 2px rgba(0,0,0,0.1);
+}
+
+/* Binder Rings */
+.binder-rings {
+    position: absolute;
+    top: -10px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-evenly;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.ring {
+    width: 12px;
+    height: 24px;
+    background: linear-gradient(90deg, #9ca3af 0%, #d1d5db 30%, #f3f4f6 50%, #9ca3af 70%, #4b5563 100%);
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.ring::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 2px;
+    width: 8px;
+    height: 8px;
+    background: #374151;
+    border-radius: 50%;
+    z-index: -1;
+}
+
+/* Paper texture overlay */
+.paper-texture {
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23000000' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: 12px;
 }

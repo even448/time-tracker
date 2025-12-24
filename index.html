@@ -171,6 +171,19 @@
                     <label class="block text-sm text-gray-500 mb-1">事件名称 <span class="text-red-500">*</span></label>
                     <input type="text" name="title" required class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary" placeholder="例如：期末考试">
                 </div>
+                
+                <!-- Count Up Mode Toggle -->
+                <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                    <div>
+                        <span class="text-sm font-bold block">正数日模式</span>
+                        <span class="text-xs text-gray-400">用于记录“已经开始多少天”（如纪念日）</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="countUpMode" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm text-gray-500 mb-1">类型</label>
@@ -374,29 +387,50 @@
         </div>
     </div>
 
+    <!-- 模态框: 归档列表 -->
+    <div id="modal-archive" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 w-80 rounded-2xl p-6 shadow-2xl max-h-[80vh] flex flex-col">
+            <h3 class="font-bold text-lg mb-4">已归档倒数日</h3>
+            <div id="archive-list" class="flex-1 overflow-y-auto space-y-2 min-h-[100px]">
+                <!-- 动态列表 -->
+            </div>
+            <button onclick="closeModal('modal-archive')" class="w-full mt-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm">关闭</button>
+        </div>
+    </div>
+
     <!-- 模态框: 设置 -->
-    <div id="modal-settings" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+    <div id="modal-settings" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-800 w-80 rounded-2xl p-6 shadow-2xl">
-            <h3 class="font-bold text-lg mb-4 text-gray-800 dark:text-white">设置</h3>
-            <div class="space-y-4">
-                <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
-                    <p class="text-sm text-gray-500 mb-2">数据备份</p>
-                    <div class="flex space-x-2">
-                        <button onclick="exportData()" class="flex-1 bg-primary/10 text-primary py-2 rounded-lg text-sm font-medium hover:bg-primary/20">
-                            <i class="fa-solid fa-download mr-1"></i> 导出
-                        </button>
-                        <button onclick="document.getElementById('import-file').click()" class="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600">
-                            <i class="fa-solid fa-upload mr-1"></i> 导入
-                        </button>
-                        <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(this)">
-                    </div>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-500">消息通知</span>
-                    <button onclick="requestNotificationPermission()" class="text-xs bg-secondary text-white px-3 py-1.5 rounded-lg shadow-sm font-medium hover:bg-pink-600 transition-colors">开启通知</button>
+            <h3 class="font-bold text-lg mb-6 text-center">设置</h3>
+            
+            <div class="space-y-3">
+                <button onclick="openArchiveModal(); closeModal('modal-settings')" class="w-full py-3 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-between px-4 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                    <span class="text-sm font-medium"><i class="fa-solid fa-box-archive mr-2 text-primary"></i>归档箱</span>
+                    <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+                </button>
+                
+                <button onclick="exportData()" class="w-full py-3 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-between px-4 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                    <span class="text-sm font-medium"><i class="fa-solid fa-file-export mr-2 text-blue-500"></i>导出数据 (JSON)</span>
+                    <i class="fa-solid fa-download text-xs text-gray-400"></i>
+                </button>
+                
+                <button onclick="document.getElementById('import-file').click()" class="w-full py-3 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-between px-4 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                    <span class="text-sm font-medium"><i class="fa-solid fa-file-import mr-2 text-green-500"></i>导入数据</span>
+                    <i class="fa-solid fa-upload text-xs text-gray-400"></i>
+                </button>
+                <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(this)">
+                
+                <!-- Notification Toggle -->
+                <div class="w-full py-3 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-between px-4">
+                     <span class="text-sm font-medium"><i class="fa-solid fa-bell mr-2 text-yellow-500"></i>通知提醒</span>
+                     <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="notification-toggle" class="sr-only peer" onchange="toggleNotifications(this)">
+                        <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
+                    </label>
                 </div>
             </div>
-            <button onclick="closeModal('modal-settings')" class="w-full mt-6 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm font-medium">关闭</button>
+
+            <button onclick="closeModal('modal-settings')" class="w-full mt-6 py-2 text-gray-400 text-sm hover:text-gray-600">关闭</button>
         </div>
     </div>
 

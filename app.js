@@ -133,7 +133,9 @@ function renderCountdowns() {
     
     container.innerHTML = '';
     
-    let filteredList = appData.countdowns;
+    // Filter out archived
+    let filteredList = appData.countdowns.filter(item => !item.archived);
+    
     if (searchQuery) {
         filteredList = filteredList.filter(item => item.title.toLowerCase().includes(searchQuery));
     }
@@ -154,8 +156,11 @@ function createCountdownCard(item) {
     const now = new Date();
     let target = new Date(item.targetDate);
     
-    // Handle Repeating Logic
-    if (item.repeat && item.repeat !== 'none') {
+    // Handle Repeating Logic (Only if NOT a fixed past event "Count Up" mode)
+    // If user explicitly chose "Count Up" (item.countUpMode), we usually stick to original date unless user wants annual anniversary count up?
+    // Usually "Count Up" means "Days Since...", so we don't repeat the target date to future.
+    
+    if (!item.countUpMode && item.repeat && item.repeat !== 'none') {
         const originalTarget = new Date(item.targetDate);
         let next = new Date(originalTarget);
         
@@ -177,68 +182,114 @@ function createCountdownCard(item) {
     const diffMs = target - now;
     const isPast = diffMs < 0;
     
-    // Display Logic
-    let displayDays = 0;
+    // Logic for display:
+    // If isPast and NOT countUpMode -> It's an expired deadline (Archive candidate)
+    // If isPast and countUpMode -> It's a "Days Since" (Normal display)
+    // If !isPast -> "Days Left" (Normal display)
+    
     let labelText = '';
+    let mainNumber = 0;
+    let subText = '';
+    
+    // Calculate precise time components
+    const absDiff = Math.abs(diffMs);
+    const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
     
     if (isPast) {
-        // Count Up
-        labelText = '已累计';
-        displayDays = Math.abs(Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+        if (item.countUpMode) {
+            labelText = '已经起始';
+            mainNumber = days;
+            subText = `${days}天 ${hours}小时 ${minutes}分钟`;
+        } else {
+            labelText = '已经过去';
+            mainNumber = days;
+            subText = `${days}天 ${hours}小时 ${minutes}分钟`; // Expired
+        }
     } else {
-        // Countdown
-        labelText = '还剩';
-        displayDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        labelText = '还有';
+        mainNumber = days; // usually +1 for ceiling? Or floor? "Days Left". If 0.5 days, usually say 0 days X hours or 1 day?
+        // Standard countdown usually uses ceil for "Days Left" if only days. But with H/M, floor is better.
+        // Let's use floor days + H/M.
+        mainNumber = Math.ceil(diffMs / (1000 * 60 * 60 * 24)); // Keep original logic for Big Number
+        // For detailed subtext, use precise
+        subText = `${days}天 ${hours}小时 ${minutes}分钟`;
     }
     
-    // 颜色映射
+    // Colors
     const colorMap = {
-        blue: 'from-blue-500 to-cyan-400',
-        red: 'from-red-500 to-orange-400',
-        green: 'from-emerald-500 to-green-400',
-        purple: 'from-purple-500 to-indigo-400'
+        blue: 'from-blue-500 to-blue-600',
+        red: 'from-red-500 to-red-600',
+        green: 'from-emerald-500 to-emerald-600',
+        purple: 'from-purple-500 to-purple-600'
     };
-    const bgClass = colorMap[item.color] || colorMap.blue;
+    const gradientClass = colorMap[item.color] || colorMap.blue;
 
     const div = document.createElement('div');
-    div.className = 'relative overflow-hidden rounded-xl shadow-md h-24 touch-pan-y';
+    // Skeuomorphic layout
+    // h-auto to fit content, mb-4 for spacing
+    div.className = 'skeuomorphic-card mb-4 touch-pan-y transition-transform duration-200';
     
-    // Bg Image Logic
-    let contentStyle = '';
-    let overlay = '';
-    let textColorClass = 'text-gray-800 dark:text-gray-100';
-    let subTextColorClass = 'text-gray-500 dark:text-gray-400';
-    let iconBgClass = `bg-gradient-to-br ${bgClass}`;
-    let countTextClass = isPast ? 'text-secondary' : 'text-primary';
+    // Bg Image Logic (Apply to the paper body or the top header? Days Matter usually puts image on the whole background or just header. 
+    // Let's put it on the header for calendar style, or use it as a texture for the whole card with overlay.)
+    // User asked for "Skeuomorphic Calendar". Standard: Top color bar, White body.
+    // If user has BgImage, maybe replace the Top Color Bar with the image? Or the whole card?
+    // Let's try replacing the Top Color Bar with the Image if exists, or if it's a full card bg, maybe apply to the whole card with multiply blend mode.
+    // Let's stick to "Top Header" having the image if present, else gradient.
+    
+    let headerStyle = '';
+    let headerClass = `calendar-top ${gradientClass}`;
     
     if (item.bgImage) {
-        contentStyle = `background-image: url('${item.bgImage}'); background-size: cover; background-position: center;`;
-        overlay = '<div class="absolute inset-0 bg-black/40"></div>';
-        textColorClass = 'text-white';
-        subTextColorClass = 'text-gray-200';
-        countTextClass = 'text-white';
+        headerStyle = `background-image: url('${item.bgImage}'); background-size: cover; background-position: center; height: 120px;`; // Taller header for image
+        headerClass = 'calendar-top'; // Remove gradient class
     }
+
+    const archiveBtn = (isPast && !item.countUpMode) 
+        ? `<button onclick="archiveCountdown('${item.id}')" class="absolute top-2 right-2 text-white/80 hover:text-white z-30"><i class="fa-solid fa-box-archive"></i></button>` 
+        : '';
 
     div.innerHTML = `
         <div class="delete-bg" onclick="deleteCountdown('${item.id}')">
             <i class="fa-solid fa-trash mr-2"></i> 删除
         </div>
-        <div class="swipe-item absolute inset-0 bg-white dark:bg-gray-800 flex items-center p-4 cursor-pointer transition-transform duration-200" id="cd-${item.id}" style="${contentStyle}">
-            ${overlay}
-            <div class="relative z-10 flex items-center w-full">
-                <div class="w-12 h-12 rounded-lg ${iconBgClass} flex items-center justify-center text-white shrink-0 shadow-sm">
-                    <i class="fa-solid ${getIconByType(item.type)} text-xl"></i>
-                </div>
-                <div class="ml-4 flex-1 min-w-0">
-                    <h3 class="font-bold ${textColorClass} truncate">
+        
+        <div class="swipe-item bg-white dark:bg-gray-800 rounded-xl overflow-hidden relative z-10" id="cd-${item.id}">
+            <!-- Binder Rings -->
+            <div class="binder-rings">
+                <div class="ring"></div>
+                <div class="ring"></div>
+                <div class="ring"></div>
+                <div class="ring"></div>
+            </div>
+            
+            <!-- Header -->
+            <div class="${headerClass}" style="${headerStyle}">
+                <div class="absolute inset-0 bg-black/10"></div> <!-- Slight overlay for depth -->
+                ${archiveBtn}
+                <div class="absolute bottom-2 left-4 right-4">
+                     <h3 class="font-bold text-white text-lg truncate shadow-black drop-shadow-md">
                         ${item.title} 
-                        ${item.repeat && item.repeat !== 'none' ? '<i class="fa-solid fa-rotate-right text-xs ml-1 opacity-70"></i>' : ''}
+                        ${item.repeat && item.repeat !== 'none' ? '<i class="fa-solid fa-rotate-right text-xs ml-1 opacity-80"></i>' : ''}
+                        ${item.countUpMode ? '<span class="text-[10px] bg-white/20 px-1 rounded ml-1">正数</span>' : ''}
                     </h3>
-                    <p class="text-xs ${subTextColorClass}">${target.toLocaleDateString()} ${target.getHours()}:${String(target.getMinutes()).padStart(2,'0')}</p>
                 </div>
-                <div class="text-right shrink-0">
-                    <p class="text-xs ${subTextColorClass} mb-1">${labelText}</p>
-                    <p class="text-2xl font-bold ${countTextClass} leading-none">${displayDays}<span class="text-xs font-normal ml-1">天</span></p>
+            </div>
+            
+            <!-- Body -->
+            <div class="p-4 flex items-center justify-between relative">
+                <div class="paper-texture"></div>
+                
+                <div class="flex-1 relative z-10">
+                     <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1 uppercase tracking-wide">${labelText}</p>
+                     <p class="text-xs text-gray-400">${target.toLocaleDateString()} ${target.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                     <p class="text-xs text-secondary mt-1 font-mono">${subText}</p>
+                </div>
+                
+                <div class="relative z-10 text-right">
+                    <span class="text-4xl font-bold text-gray-800 dark:text-gray-100">${mainNumber}</span>
+                    <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">天</span>
                 </div>
             </div>
         </div>
@@ -247,6 +298,69 @@ function createCountdownCard(item) {
     bindSwipe(div.querySelector('.swipe-item'), () => deleteCountdown(item.id));
     
     return div;
+}
+
+// 自动更新计时器 (Every minute)
+setInterval(() => {
+    // Only re-render if we are on the countdown tab to save performance?
+    // Or just re-render specific parts. For simplicity, re-render all countdowns.
+    // Ideally we should just update the DOM elements, but renderCountdowns is fast enough for < 100 items.
+    if (!document.getElementById('page-countdown').classList.contains('opacity-0')) {
+        renderCountdowns();
+    }
+    // Also update Todos deadlines
+    if (!document.getElementById('page-todo').classList.contains('opacity-0')) {
+        renderTodos();
+    }
+}, 60000);
+
+// Archive Logic
+function archiveCountdown(id) {
+    const item = appData.countdowns.find(i => i.id === id);
+    if (item) {
+        if(confirm('确定归档此已过期的倒数日吗？归档后可在设置中查看。')) {
+            item.archived = true;
+            saveData();
+            renderCountdowns();
+            showToast('已归档');
+        }
+    }
+}
+
+function unarchiveCountdown(id) {
+    const item = appData.countdowns.find(i => i.id === id);
+    if (item) {
+        item.archived = false;
+        saveData();
+        renderArchiveList(); // Refresh archive modal
+        renderCountdowns(); // Refresh main list
+        showToast('已取消归档');
+    }
+}
+
+function openArchiveModal() {
+    renderArchiveList();
+    openModal('modal-archive');
+}
+
+function renderArchiveList() {
+    const list = document.getElementById('archive-list');
+    const archived = appData.countdowns.filter(i => i.archived);
+    
+    if (archived.length === 0) {
+        list.innerHTML = '<p class="text-center text-gray-400 py-4">暂无归档</p>';
+        return;
+    }
+    
+    list.innerHTML = archived.map(item => `
+        <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg mb-2">
+            <div>
+                <p class="font-bold text-sm dark:text-gray-200">${item.title}</p>
+                <p class="text-xs text-gray-400">${new Date(item.targetDate).toLocaleDateString()}</p>
+            </div>
+            <button onclick="unarchiveCountdown('${item.id}')" class="text-primary text-sm font-bold">还原</button>
+        </div>
+    `).join('');
 }
 
 function getIconByType(type) {
@@ -446,7 +560,9 @@ function handleCountdownSubmit(e) {
             color: form.color.value,
             repeat: form.repeat.value,
             targetDate: form.targetDate.value,
+            countUpMode: form.countUpMode.checked, // New Field
             bgImage: bgDataUrl,
+            archived: false,
             createdAt: new Date().toISOString()
         };
         
