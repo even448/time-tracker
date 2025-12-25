@@ -1,0 +1,22 @@
+{
+  "name": "time-planner-app",
+  "version": "1.0.0",
+  "description": "Time Planner & Todo PWA",
+  "main": "app.js",
+  "scripts": {
+    "start": "npx http-server .",
+    "build": "echo 'No build step required for static site'",
+    "android": "npx cap add android && npx cap open android",
+    "ios": "npx cap add ios && npx cap open ios"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@capacitor/cli": "^5.0.0",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/ios": "^5.0.0",
+    "http-server": "^14.1.1"
+  }
+}

@@ -54,6 +54,149 @@ function registerSW() {
     }
 }
 
+// Cloud Sync Manager
+let cloudSync = {
+    db: null,
+    docRef: null,
+    unsubscribe: null,
+    config: null,
+    enabled: false
+};
+
+function initCloudSync() {
+    const savedConfig = localStorage.getItem('firebaseConfig');
+    const savedEnabled = localStorage.getItem('cloudSyncEnabled') === 'true';
+    
+    if (savedConfig) {
+        try {
+            cloudSync.config = JSON.parse(savedConfig);
+            document.getElementById('firebase-config-input').value = savedConfig;
+        } catch (e) {
+            console.error('Invalid Firebase Config');
+        }
+    }
+    
+    document.getElementById('cloud-sync-toggle').checked = savedEnabled;
+    cloudSync.enabled = savedEnabled;
+
+    if (cloudSync.enabled && cloudSync.config) {
+        connectToCloud();
+    }
+}
+
+function connectToCloud() {
+    if (!window.firebaseModules) {
+        setTimeout(connectToCloud, 500); // Wait for modules to load
+        return;
+    }
+
+    try {
+        const { initializeApp, getFirestore, doc, onSnapshot, setDoc } = window.firebaseModules;
+        
+        const app = initializeApp(cloudSync.config);
+        cloudSync.db = getFirestore(app);
+        // Use a static doc ID 'user_data' for simplicity (Single User Mode)
+        // In a real app, you'd use Auth UID
+        cloudSync.docRef = doc(cloudSync.db, "time_tracker", "user_data");
+        
+        // Listen for changes
+        cloudSync.unsubscribe = onSnapshot(cloudSync.docRef, (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                // Check if cloud data is newer or different?
+                // For simplicity, we just trust cloud if it's an update not from us
+                // But to avoid loops, we might need timestamps.
+                // Let's just overwrite local appData with Cloud Data
+                // BUT only if we didn't just write it.
+                // Simplified: Just overwrite and render.
+                
+                // Merge logic could be complex. Here we replace.
+                if (JSON.stringify(data) !== JSON.stringify(appData)) {
+                    console.log('Received Cloud Update');
+                    appData = data;
+                    saveData(false); // Save to local but DON'T push back to cloud
+                    renderAll();
+                    showToast('数据已从云端同步');
+                }
+            }
+        });
+
+        document.getElementById('cloud-status').classList.remove('hidden');
+        showToast('已连接到云端数据库');
+
+    } catch (e) {
+        console.error('Cloud Connection Failed', e);
+        showToast('云端连接失败，请检查配置');
+    }
+}
+
+function openCloudSyncModal() {
+    openModal('modal-cloud-sync');
+}
+
+function saveCloudConfig() {
+    let input = document.getElementById('firebase-config-input').value.trim();
+    if (!input) return;
+    
+    try {
+        // Allow user to paste JS object format (keys without quotes) and convert to JSON
+        // Simple regex to add quotes to keys if missing
+        if (!input.trim().startsWith('"') && !input.trim().startsWith('{')) {
+             throw new Error("Invalid start");
+        }
+        
+        // Relaxed JSON parsing: try to fix common copy-paste formats
+        // 1. Remove "const firebaseConfig =" if present
+        input = input.replace(/const\s+firebaseConfig\s*=\s*/, '');
+        // 2. Remove trailing semicolon
+        input = input.replace(/;\s*$/, '');
+        
+        // 3. Try standard JSON parse first
+        let config;
+        try {
+            config = JSON.parse(input);
+        } catch (e) {
+            // 4. If failed, try to evaluate as JS object (risky but convenient for this specific user pasting config)
+            // Or better: use regex to quote keys. 
+            // Replace unquoted keys:  key: "value"  ->  "key": "value"
+            const jsonString = input.replace(/(\w+):/g, '"$1":');
+            config = JSON.parse(jsonString);
+        }
+
+        localStorage.setItem('firebaseConfig', JSON.stringify(config));
+        cloudSync.config = config;
+        
+        if (cloudSync.enabled) {
+            connectToCloud();
+        }
+        
+        closeModal('modal-cloud-sync');
+        showToast('配置已保存');
+    } catch (e) {
+        console.error(e);
+        alert('配置格式错误，请确保只复制了 { ... } 部分，或者手动给属性名加上双引号。');
+    }
+}
+
+function toggleCloudSync(el) {
+    cloudSync.enabled = el.checked;
+    localStorage.setItem('cloudSyncEnabled', el.checked);
+    
+    if (cloudSync.enabled) {
+        if (cloudSync.config) {
+            connectToCloud();
+        } else {
+            showToast('请先输入 Firebase 配置');
+        }
+    } else {
+        if (cloudSync.unsubscribe) {
+            cloudSync.unsubscribe();
+            cloudSync.unsubscribe = null;
+        }
+        document.getElementById('cloud-status').classList.add('hidden');
+    }
+}
+
 // 数据管理
 function loadData() {
     const saved = localStorage.getItem('timeTrackerData');
@@ -64,10 +207,21 @@ function loadData() {
         if (!appData.settings) appData.settings = { theme: 'light' };
         if (!appData.focusTasks) appData.focusTasks = [];
     }
+    
+    // Init Cloud after local load
+    initCloudSync();
 }
 
-function saveData() {
+function saveData(syncToCloud = true) {
     localStorage.setItem('timeTrackerData', JSON.stringify(appData));
+    
+    if (syncToCloud && cloudSync.enabled && cloudSync.db) {
+        const { setDoc } = window.firebaseModules;
+        // Debounce could be good here, but for now direct write
+        setDoc(cloudSync.docRef, appData)
+            .then(() => console.log('Synced to Cloud'))
+            .catch(e => console.error('Cloud Save Error', e));
+    }
 }
 
 // 主题管理

@@ -34,6 +34,12 @@
     </script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    
+    <!-- PWA for iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="时光清单">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2921/2921226.png">
 </head>
 <body class="bg-[#fcfaf8] dark:bg-[#1c1917] text-stone-800 dark:text-stone-100 transition-colors duration-300 h-screen overflow-hidden flex flex-col font-sans relative">
 
@@ -519,6 +525,41 @@
         </div>
     </div>
 
+    <!-- 模态框: 云端同步设置 -->
+    <div id="modal-cloud-sync" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-stone-800 w-96 rounded-2xl p-6 shadow-2xl max-h-[85vh] flex flex-col overflow-y-auto">
+            <h3 class="font-bold text-lg mb-2 text-center">云端同步设置</h3>
+            <p class="text-xs text-stone-400 text-center mb-4">基于 Google Firebase 实现多设备实时同步</p>
+            
+            <div class="space-y-4">
+                <!-- Config Input -->
+                <div>
+                    <label class="block text-sm text-stone-500 mb-1">Firebase Config (JSON)</label>
+                    <textarea id="firebase-config-input" rows="5" class="w-full bg-stone-100 dark:bg-stone-700 rounded-lg p-2 text-xs font-mono outline-none resize-none" placeholder='{"apiKey": "...", "authDomain": "...", ...}'></textarea>
+                    <p class="text-[10px] text-stone-400 mt-1">请在 Firebase 控制台创建一个 Web 应用，并将配置对象粘贴到此处。</p>
+                </div>
+
+                <div class="flex items-center justify-between bg-stone-50 dark:bg-stone-700/50 p-3 rounded-lg">
+                    <span class="text-sm font-bold">启用同步</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="cloud-sync-toggle" class="sr-only peer" onchange="toggleCloudSync(this)">
+                        <div class="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer dark:bg-stone-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500"></div>
+                    </label>
+                </div>
+
+                <div id="cloud-status" class="hidden bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-300 p-3 rounded-lg text-xs flex items-center">
+                    <i class="fa-solid fa-circle-check mr-2"></i>
+                    <span>已连接到云端</span>
+                </div>
+            </div>
+
+            <div class="mt-6 flex space-x-2">
+                 <button onclick="saveCloudConfig()" class="flex-1 py-2 bg-primary text-white rounded-lg text-sm shadow-md">保存配置</button>
+                 <button onclick="closeModal('modal-cloud-sync')" class="flex-1 py-2 bg-stone-200 dark:bg-stone-700 rounded-lg text-sm">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 模态框: 设置 -->
     <div id="modal-settings" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white dark:bg-stone-800 w-80 rounded-2xl p-6 shadow-2xl">
@@ -540,6 +581,12 @@
                     <i class="fa-solid fa-upload text-xs text-stone-400"></i>
                 </button>
                 <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(this)">
+
+                <!-- Cloud Sync -->
+                <button onclick="openCloudSyncModal(); closeModal('modal-settings')" class="w-full py-3 bg-stone-100 dark:bg-stone-700 rounded-xl flex items-center justify-between px-4 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">
+                    <span class="text-sm font-medium"><i class="fa-solid fa-cloud mr-2 text-sky-500"></i>云端同步 (Firebase)</span>
+                    <i class="fa-solid fa-wifi text-xs text-stone-400"></i>
+                </button>
                 
                 <!-- Notification Toggle -->
                 <div class="w-full py-3 bg-stone-100 dark:bg-stone-700 rounded-xl flex items-center justify-between px-4">
@@ -561,6 +608,23 @@
         <span id="toast-msg">操作成功</span>
     </div>
 
+    <!-- Firebase SDK (Modular) -->
+    <!-- We will load them dynamically if config is present to avoid errors if no internet or no config -->
+    <script type="module">
+        // Expose Firebase to window for our app.js to use
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        window.firebaseModules = {
+            initializeApp,
+            getFirestore,
+            doc,
+            onSnapshot,
+            setDoc,
+            getDoc
+        };
+    </script>
+    
     <script src="app.js"></script>
 </body>
 </html>
