@@ -31,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     renderAll();
     renderFocusStats(); // Initial stats render
+    updateFocusTaskUI();
+    updateTimerButtonState(false);
     registerSW();
 
     // 绑定主题切换
@@ -274,26 +276,29 @@ function switchTab(tab) {
     const n2 = document.getElementById('nav-todo');
     const n3 = document.getElementById('nav-focus');
 
-    // Reset all
-    [p1, p2, p3].forEach(p => p.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none'));
-    [p1, p2, p3].forEach(p => p.classList.remove('-translate-x-full'));
+    // Reset all content
+    [p1, p2, p3].forEach(p => {
+        p.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+        p.classList.remove('-translate-x-full');
+    });
     
+    // Reset nav buttons
     [n1, n2, n3].forEach(n => {
-        n.classList.remove('text-primary', 'text-secondary', 'text-emerald-600');
-        n.classList.add('text-stone-400');
+        n.classList.remove('active', 'text-stone-800', 'dark:text-stone-100');
+        n.classList.add('text-stone-400'); // Fallback text color for non-active
     });
 
     if (tab === 'countdown') {
         p1.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
-        n1.classList.add('text-primary');
+        n1.classList.add('active');
         n1.classList.remove('text-stone-400');
     } else if (tab === 'todo') {
         p2.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
-        n2.classList.add('text-secondary');
+        n2.classList.add('active');
         n2.classList.remove('text-stone-400');
     } else if (tab === 'focus') {
         p3.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
-        n3.classList.add('text-emerald-600'); // Use Emerald (Warm Green) for Focus
+        n3.classList.add('active');
         n3.classList.remove('text-stone-400');
         renderFocusStats();
     }
@@ -363,65 +368,76 @@ function createCountdownCard(item) {
     const diffMs = target - now;
     const isPast = diffMs < 0;
     
-    // Logic for display:
-    // If isPast and NOT countUpMode -> It's an expired deadline (Archive candidate)
-    // If isPast and countUpMode -> It's a "Days Since" (Normal display)
-    // If !isPast -> "Days Left" (Normal display)
-    
-    let labelText = '';
-    let mainNumber = 0;
-    let subText = '';
-    
-    // Calculate precise time components
+    // --- OPTIMIZED VISUAL DESIGN & LOGIC ---
+
     const absDiff = Math.abs(diffMs);
+    const totalHours = absDiff / (1000 * 60 * 60);
     const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+    // 1. Urgency Color Logic
+    let headerBgClass = ''; // This will replace bgClass logic
     
     if (isPast) {
-        if (item.countUpMode) {
-            labelText = '已经起始';
-            mainNumber = days;
-            subText = `${days}天 ${hours}小时 ${minutes}分钟`;
-        } else {
-            labelText = '已经过去';
-            mainNumber = days;
-            subText = `${days}天 ${hours}小时 ${minutes}分钟`; // Expired
-        }
+         headerBgClass = item.countUpMode ? 'bg-orange-500' : 'bg-stone-500';
     } else {
-        labelText = '还有';
-        mainNumber = days; // usually +1 for ceiling? Or floor? "Days Left". If 0.5 days, usually say 0 days X hours or 1 day?
-        // Standard countdown usually uses ceil for "Days Left" if only days. But with H/M, floor is better.
-        // Let's use floor days + H/M.
-        mainNumber = Math.ceil(diffMs / (1000 * 60 * 60 * 24)); // Keep original logic for Big Number
-        // For detailed subtext, use precise
-        subText = `${days}天 ${hours}小时 ${minutes}分钟`;
+        if (totalHours < 24) headerBgClass = 'bg-[#FF5252]'; // Coral/Red (<24h)
+        else if (totalHours < 72) headerBgClass = 'bg-blue-500'; // Blue (1-3d)
+        else headerBgClass = 'bg-emerald-500'; // Green (>3d)
+    }
+
+    // 2. Number Logic (Hero Number)
+    let labelText = isPast ? (item.countUpMode ? '已经起始' : '已经过去') : '还有';
+    let mainNumber = days;
+    let mainUnit = '天';
+    let isUrgentTime = (!isPast && totalHours < 1);
+    
+    if (!isPast) {
+        if (days >= 1) { mainNumber = days; mainUnit = '天'; }
+        else if (hours >= 1) { mainNumber = hours; mainUnit = '小时'; }
+        else { mainNumber = minutes; mainUnit = '分'; }
+    } else {
+        mainNumber = days; mainUnit = '天';
     }
     
-    // Colors - Flat
-    const colorMap = {
-        blue: 'bg-blue-500',
-        red: 'bg-red-500',
-        green: 'bg-emerald-500',
-        purple: 'bg-purple-500'
-    };
-    const bgClass = colorMap[item.color] || colorMap.blue;
+    // Subtext
+    let subText = `${days}天 ${hours}小时 ${minutes}分钟`;
+    
+    // 3. Progress Bar Logic
+    let startTime = item.createdAt ? new Date(item.createdAt).getTime() : (target.getTime() - 30 * 24 * 60 * 60 * 1000);
+    if (item.repeat && item.repeat !== 'none') {
+         const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+         const potentialStart = target.getTime() - thirtyDays;
+         if (startTime < potentialStart) startTime = potentialStart; 
+    }
+    const totalDuration = target.getTime() - startTime;
+    const elapsed = now.getTime() - startTime;
+    let progressPct = 0;
+    if (totalDuration > 0) {
+        progressPct = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+    }
+    if (isPast && !item.countUpMode) progressPct = 100;
 
     const div = document.createElement('div');
-    // Skeuomorphic layout restored with flat colors
-    div.className = 'relative touch-pan-y transition-transform duration-200 mt-3'; // Add margin top for rings
+    div.className = 'relative touch-pan-y transition-transform duration-200 mt-4'; 
     
-    // Bg Image Logic
     let headerStyle = '';
-    let headerClass = `calendar-top ${bgClass}`;
+    let headerClass = `calendar-top ${headerBgClass} transition-colors duration-300`;
     
     if (item.bgImage) {
-        headerStyle = `background-image: url('${item.bgImage}'); background-size: cover; background-position: center; height: 120px;`;
-        headerClass = 'calendar-top h-[120px]'; // Override height
+        headerStyle = `background-image: url('${item.bgImage}'); background-size: cover; background-position: center; height: 100px;`;
+        headerClass = 'calendar-top h-[100px]'; 
     }
 
     const archiveBtn = (isPast && !item.countUpMode) 
-        ? `<button onclick="archiveCountdown('${item.id}')" class="absolute top-2 right-2 text-white/80 hover:text-white z-30"><i class="fa-solid fa-box-archive"></i></button>` 
+        ? `<button onclick="archiveCountdown('${item.id}')" class="absolute top-2 right-2 text-white/90 hover:text-white z-30 p-2"><i class="fa-solid fa-box-archive"></i></button>` 
+        : '';
+        
+    const focusBtn = (!isPast) 
+        ? `<button onclick="startSubjectFocus('${item.title}')" class="absolute -bottom-4 right-4 bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-200 text-xs px-3 py-1.5 rounded-full shadow-md hover:scale-105 active:scale-95 transition-transform flex items-center border border-stone-100 dark:border-stone-700 z-20">
+            <i class="fa-solid fa-stopwatch mr-1 text-primary"></i> 专注
+           </button>`
         : '';
 
     div.innerHTML = `
@@ -429,32 +445,44 @@ function createCountdownCard(item) {
             <i class="fa-solid fa-trash mr-2"></i> 删除
         </div>
         
-        <div class="swipe-item modern-card calendar-card overflow-hidden relative z-10" id="cd-${item.id}">
+        <div class="swipe-item modern-card calendar-card overflow-visible relative z-10" id="cd-${item.id}">
             <!-- Header -->
             <div class="${headerClass}" style="${headerStyle}">
-                <div class="absolute inset-0 bg-black/5 rounded-t-2xl"></div> <!-- Subtle overlay for depth -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 ${archiveBtn}
-                <div class="absolute bottom-2 left-4 right-4 z-10">
-                     <h3 class="font-bold text-white text-lg truncate drop-shadow-sm">
+                <div class="relative z-10 w-full flex justify-between items-end pb-1">
+                     <h3 class="font-bold text-white text-lg truncate flex-1 mr-2 drop-shadow-md">
                         ${item.title} 
                         ${item.repeat && item.repeat !== 'none' ? '<i class="fa-solid fa-rotate-right text-xs ml-1 opacity-80"></i>' : ''}
-                        ${item.countUpMode ? '<span class="text-[10px] bg-white/20 px-1 rounded ml-1">正数</span>' : ''}
                     </h3>
+                    ${item.countUpMode ? '<span class="text-[10px] bg-white/20 text-white px-1.5 py-0.5 rounded backdrop-blur-sm">正数</span>' : ''}
                 </div>
             </div>
             
+            ${focusBtn}
+
             <!-- Body -->
-            <div class="p-5 flex items-center justify-between relative bg-white dark:bg-[#1c1917]">
-                <div class="flex-1 relative z-10">
-                     <p class="text-xs text-stone-500 dark:text-stone-400 font-medium mb-1 uppercase tracking-wide">${labelText}</p>
-                     <p class="text-xs text-stone-400">${target.toLocaleDateString()} ${target.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                     <p class="text-xs text-secondary mt-1 font-mono">${subText}</p>
+            <div class="p-5 pt-6 flex items-center justify-between relative bg-white dark:bg-[#1c1917]">
+                <div class="flex-1 relative z-10 mr-4">
+                     <div class="flex items-baseline space-x-1 mb-1">
+                        <p class="text-xs text-stone-500 dark:text-stone-400 font-medium uppercase tracking-wide">${labelText}</p>
+                        <p class="text-xs text-stone-300 dark:text-stone-600">|</p>
+                        <p class="text-xs text-stone-400 dark:text-stone-500 font-mono">${target.toLocaleDateString()}</p>
+                     </div>
+                     <p class="text-xs text-stone-400 dark:text-stone-500 font-normal leading-relaxed">${subText}</p>
                 </div>
                 
-                <div class="relative z-10 text-right">
-                    <span class="text-4xl font-bold text-stone-800 dark:text-stone-100">${mainNumber}</span>
-                    <span class="text-sm text-stone-500 dark:text-stone-400 font-medium">天</span>
+                <div class="relative z-10 text-right flex flex-col items-end">
+                    <div class="flex items-baseline">
+                        <span class="text-4xl font-bold text-stone-800 dark:text-stone-100 hero-number ${isUrgentTime ? 'urgent-pulse text-red-500' : ''}">${mainNumber}</span>
+                        <span class="text-sm text-stone-500 dark:text-stone-400 font-medium ml-1">${mainUnit}</span>
+                    </div>
                 </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="h-1 bg-stone-100 dark:bg-stone-800 w-full mt-0">
+                <div class="h-full ${headerBgClass} opacity-80" style="width: ${progressPct}%"></div>
             </div>
         </div>
     `;
@@ -707,6 +735,8 @@ function setFocusMode(mode) {
     focusTimer.mode = mode;
     const btnP = document.getElementById('btn-mode-pomodoro');
     const btnS = document.getElementById('btn-mode-stopwatch');
+    const circle = document.getElementById('timer-progress');
+    const playBtn = document.getElementById('btn-timer-toggle');
     
     if (mode === 'pomodoro') {
         const defaultDuration = (focusTimer.currentTask && focusTimer.currentTask.duration) 
@@ -714,16 +744,48 @@ function setFocusMode(mode) {
             : 25 * 60;
         focusTimer.timeLeft = defaultDuration;
         focusTimer.totalTime = defaultDuration;
-        btnP.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white dark:bg-stone-600 shadow-sm text-primary';
+        btnP.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white dark:bg-stone-600 shadow-sm text-emerald-600';
         btnS.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all text-stone-500 dark:text-stone-400';
+        circle.classList.remove('stopwatch-mode');
+        playBtn.classList.remove('bg-blue-500', 'bg-blue-600', 'shadow-blue-500/40');
+        playBtn.classList.add('bg-emerald-500', 'shadow-emerald-500/40');
     } else {
         focusTimer.elapsed = 0;
         focusTimer.timeLeft = 0; // In stopwatch, we display elapsed
-        btnS.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white dark:bg-stone-600 shadow-sm text-primary';
+        btnS.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white dark:bg-stone-600 shadow-sm text-blue-500';
         btnP.className = 'px-4 py-1.5 rounded-full text-sm font-medium transition-all text-stone-500 dark:text-stone-400';
+        circle.classList.add('stopwatch-mode');
+        playBtn.classList.remove('bg-emerald-500', 'bg-emerald-600', 'shadow-emerald-500/40');
+        playBtn.classList.add('bg-blue-500', 'shadow-blue-500/40');
     }
     
     resetTimer();
+}
+
+function updateFocusTaskUI() {
+    const activeDisplay = document.getElementById('active-task-display');
+    const activeTitle = document.getElementById('active-task-title');
+    const currentTaskSpan = document.getElementById('current-focus-task');
+    if (!activeDisplay || !activeTitle || !currentTaskSpan) return;
+
+    if (focusTimer.currentTask) {
+        activeTitle.textContent = focusTimer.currentTask.title;
+        activeDisplay.classList.remove('hidden');
+        currentTaskSpan.textContent = '更换任务';
+    } else {
+        activeDisplay.classList.add('hidden');
+        currentTaskSpan.textContent = '🤔 你现在想专注于什么？';
+    }
+}
+
+function updateTimerButtonState(isRunning) {
+    const btn = document.getElementById('btn-timer-toggle');
+    if (!btn) return;
+    const isPomodoro = focusTimer.mode === 'pomodoro';
+    const baseClass = isPomodoro ? 'bg-emerald-500' : 'bg-blue-500';
+    const runningClass = isPomodoro ? 'bg-emerald-600' : 'bg-blue-600';
+    btn.classList.remove('bg-emerald-500', 'bg-emerald-600', 'bg-blue-500', 'bg-blue-600');
+    btn.classList.add(isRunning ? runningClass : baseClass);
 }
 
 function toggleTimer() {
@@ -735,15 +797,13 @@ function toggleTimer() {
         focusTimer.isRunning = false;
         focusTimer.isPaused = true;
         btn.innerHTML = '<i class="fa-solid fa-play ml-1"></i>';
-        btn.classList.remove('bg-yellow-500');
-        btn.classList.add('bg-primary');
+        updateTimerButtonState(false);
     } else {
         // Start
         focusTimer.isRunning = true;
         focusTimer.isPaused = false;
         btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-        btn.classList.remove('bg-primary');
-        btn.classList.add('bg-yellow-500'); // Pause color
+        updateTimerButtonState(true);
         
         focusTimer.interval = setInterval(() => {
             if (focusTimer.mode === 'pomodoro') {
@@ -769,8 +829,7 @@ function stopTimer(save = true) {
     clearInterval(focusTimer.interval);
     const btn = document.getElementById('btn-timer-toggle');
     btn.innerHTML = '<i class="fa-solid fa-play ml-1"></i>';
-    btn.classList.remove('bg-yellow-500');
-    btn.classList.add('bg-primary');
+    updateTimerButtonState(false);
     
     if (focusTimer.isRunning || focusTimer.isPaused) {
         if (save) {
@@ -808,7 +867,7 @@ function resetTimer() {
 function updateTimerDisplay() {
     const display = document.getElementById('timer-display');
     const circle = document.getElementById('timer-progress');
-    const fullDash = 753.98; // 2 * PI * 120
+    const fullDash = 703.72; // 2 * PI * 112
     
     let seconds = 0;
     let progress = 0;
@@ -838,6 +897,8 @@ function updateTimerDisplay() {
         // progress goes 0 -> 1.
         circle.style.strokeDashoffset = -1 * (progress * fullDash); 
     }
+
+    updateFocusTaskUI();
 }
 
 function openFocusTaskSelect() {
@@ -917,7 +978,7 @@ function selectFocusTask(taskOrId) {
     if (taskOrId && typeof taskOrId === 'object') {
         // Direct object passed
         focusTimer.currentTask = { id: taskOrId.id, title: taskOrId.title };
-        document.getElementById('current-focus-task').textContent = taskOrId.title;
+        updateFocusTaskUI();
         closeModal('modal-focus-task');
     } else if (taskOrId) {
         // ID passed - check Focus Presets first, then Todos
@@ -928,7 +989,7 @@ function selectFocusTask(taskOrId) {
         
         if (task) {
             focusTimer.currentTask = { id: task.id, title: task.title };
-            document.getElementById('current-focus-task').textContent = task.title;
+            updateFocusTaskUI();
 
             // Update timer if task has custom duration and not running
             if (task.duration && focusTimer.mode === 'pomodoro' && !focusTimer.isRunning) {
@@ -941,7 +1002,7 @@ function selectFocusTask(taskOrId) {
     } else {
         // Null passed (Clear)
         focusTimer.currentTask = null;
-        document.getElementById('current-focus-task').textContent = '选择关联任务'; // Reset text
+        updateFocusTaskUI();
         closeModal('modal-focus-task');
     }
 }
@@ -973,7 +1034,7 @@ function renderFocusStats() {
     // 1. Today Total
     const todaySessions = appData.focusSessions.filter(s => new Date(s.createdAt).toDateString() === todayStr);
     const todaySeconds = todaySessions.reduce((acc, s) => acc + s.duration, 0);
-    document.getElementById('stats-today-total').textContent = formatDuration(todaySeconds);
+    document.getElementById('stats-today-total').textContent = formatDuration(todaySeconds, '--');
     
     // 2. Daily Avg
     // Group by date
@@ -986,72 +1047,66 @@ function renderFocusStats() {
     const daysCount = Object.keys(sessionsByDate).length || 1;
     const totalAllSeconds = appData.focusSessions.reduce((acc, s) => acc + s.duration, 0);
     const avgSeconds = Math.floor(totalAllSeconds / daysCount);
-    document.getElementById('stats-daily-avg').textContent = formatDuration(avgSeconds);
+    document.getElementById('stats-daily-avg').textContent = formatDuration(avgSeconds, '--');
     
     // 3. Rankings
-    const filter = document.getElementById('rank-filter') ? document.getElementById('rank-filter').value : 'day';
-    renderFocusRankings(filter);
+    renderFocusRankings();
 }
 
-function renderFocusRankings(filter) {
+function renderFocusRankings() {
     const list = document.getElementById('focus-rankings-list');
     if (!list) return;
-    
-    const now = new Date();
-    let filteredSessions = [];
-    
-    if (filter === 'day') {
-        const todayStr = now.toDateString();
-        filteredSessions = appData.focusSessions.filter(s => new Date(s.createdAt).toDateString() === todayStr);
-    } else if (filter === 'week') {
-        const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        filteredSessions = appData.focusSessions.filter(s => new Date(s.createdAt) >= lastWeek);
-    } else {
-        const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        filteredSessions = appData.focusSessions.filter(s => new Date(s.createdAt) >= lastMonth);
-    }
-    
-    // Group by Task
-    const taskStats = {}; // { taskTitle: seconds }
-    filteredSessions.forEach(s => {
-        const title = s.taskTitle || '未关联任务';
-        if (!taskStats[title]) taskStats[title] = 0;
-        taskStats[title] += s.duration;
-    });
-    
-    // Sort
-    const sorted = Object.entries(taskStats).sort((a, b) => b[1] - a[1]);
-    
-    if (sorted.length === 0) {
-        list.innerHTML = '<p class="text-center text-xs text-stone-400 py-2">该时间段暂无专注记录</p>';
+    const recentSessions = [...appData.focusSessions]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 3);
+
+    if (recentSessions.length === 0) {
+        list.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-6 text-stone-400">
+                <div class="w-12 h-12 bg-stone-100 dark:bg-stone-700/50 rounded-full flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-mug-hot text-lg"></i>
+                </div>
+                <p class="text-xs">今天还没有记录，快来抢第一！</p>
+            </div>
+        `;
         return;
     }
-    
-    const maxVal = sorted[0][1];
-    
-    list.innerHTML = sorted.map(([title, seconds], idx) => `
-        <div class="flex items-center space-x-3">
-            <span class="text-xs font-bold text-stone-400 w-4">${idx + 1}</span>
-            <div class="flex-1">
-                <div class="flex justify-between text-xs mb-1">
-                    <span class="font-medium dark:text-stone-300 truncate max-w-[120px]">${title}</span>
-                    <span class="text-stone-500">${formatDuration(seconds)}</span>
-                </div>
-                <div class="h-1.5 bg-stone-100 dark:bg-stone-700 rounded-full overflow-hidden">
-                    <div class="h-full bg-primary rounded-full" style="width: ${(seconds / maxVal) * 100}%"></div>
+
+    list.innerHTML = recentSessions.map(s => {
+        const date = new Date(s.createdAt);
+        const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const isToday = date.toDateString() === new Date().toDateString();
+        const dateDisplay = isToday ? '今天' : (date.getMonth()+1) + '/' + date.getDate();
+        return `
+        <div class="flex items-center space-x-4 py-2 border-b border-stone-100 dark:border-stone-800 last:border-0">
+            <div class="flex-shrink-0 w-10 text-center">
+                <div class="text-[10px] text-stone-400 font-bold uppercase leading-none">${dateDisplay}</div>
+                <div class="text-xs text-stone-500 font-mono mt-0.5">${timeStr}</div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-stone-700 dark:text-stone-200 truncate">${s.taskTitle || '自由专注'}</p>
+                <div class="flex items-center mt-0.5">
+                    <span class="text-[10px] bg-stone-100 dark:bg-stone-700 text-stone-500 px-1.5 rounded mr-2">${s.type === 'pomodoro' ? '番茄钟' : '秒表'}</span>
                 </div>
             </div>
+            <div class="text-right">
+                <span class="font-mono font-bold text-emerald-500 text-lg">${Math.floor(s.duration / 60)}</span>
+                <span class="text-[10px] text-stone-400">分</span>
+            </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
-function formatDuration(seconds) {
-    if (seconds < 60) return `${seconds}s`;
+function formatDuration(seconds, emptyText = '--') {
+    if (!seconds) return emptyText;
+    if (seconds < 60) return `${seconds}秒`;
     const m = Math.floor(seconds / 60);
-    if (m < 60) return `${m}m`;
+    if (m < 60) return `${m}分`;
     const h = Math.floor(m / 60);
     const remM = m % 60;
-    return `${h}h ${remM}m`;
+    if (remM === 0) return `${h}小时`;
+    return `${h}小时 ${remM}分`;
 }
 
 function closeModal(id) {

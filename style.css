@@ -3,9 +3,54 @@
     --secondary-color: #ef4444;
 }
 
-/* 隐藏滚动条但保留功能 */
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
+/* Hero Number Font */
+.hero-number {
+    font-family: 'SF Mono', 'Roboto Mono', 'Menlo', monospace; /* Monospaced for timer feel */
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -1px;
+}
+
+/* Flashing urgency */
+@keyframes urgency-pulse {
+    0%, 100% { color: #ef4444; opacity: 1; }
+    50% { color: #b91c1c; opacity: 0.8; }
+}
+.urgent-pulse {
+    animation: urgency-pulse 1.5s infinite;
+}
+
+/* Bottom Dock Active State */
+.dock-btn {
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* Springy */
+}
+.dock-btn.active {
+    transform: translateY(-15px) scale(1.1);
+}
+.dock-btn .dock-icon {
+    transition: all 0.3s ease;
+    color: #a8a29e; /* Stone-400 */
+}
+.dock-btn.active .dock-icon {
+    background-color: var(--primary-color); /* Default orange */
+    color: white;
+    box-shadow: 0 4px 10px rgba(249, 115, 22, 0.4);
+}
+/* Todo specific color override */
+#nav-todo.active .dock-icon {
+    background-color: var(--secondary-color);
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+}
+/* Focus specific color override */
+#nav-focus.active .dock-icon {
+    background-color: #10b981; /* Emerald */
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+}
+
+.dock-btn.active .dock-label {
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    margin: 0;
 }
 .no-scrollbar {
     -ms-overflow-style: none;
@@ -66,17 +111,22 @@ body {
     -webkit-tap-highlight-color: transparent;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: #fcfaf8; /* Warm bg */
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(249, 115, 22, 0.03) 0%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.03) 0%, transparent 25%);
+    background-attachment: fixed;
 }
 
 /* Modern Card Style (Unified) */
 .modern-card {
     background: #FFFFFF;
     border-radius: 16px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.05); /* Softer, layered shadow */
+    /* Deeper shadow for hierarchy, subtle border */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0,0,0,0.02);
     padding: 20px;
     position: relative;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: none;
 }
 
 /* Dark mode adjustment for card */
@@ -97,46 +147,13 @@ body {
     position: relative;
     display: flex;
     align-items: center;
-    padding: 0 20px;
+    padding: 20px;
     /* Use solid colors via utility classes, but structure is here */
 }
 
-/* Binding Rings / Holes */
-.calendar-top::before,
-.calendar-top::after {
-    content: '';
-    position: absolute;
-    top: -8px;
-    width: 14px;
-    height: 24px;
-    background: #e7e5e4; /* Stone-200 ring */
-    border-radius: 10px;
-    border: 2px solid #d6d3d1; /* Stone-300 border */
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    z-index: 20;
-}
-
-.calendar-top::before {
-    left: 40px;
-}
-
-.calendar-top::after {
-    right: 40px;
-}
-
-/* Holes on the body paper */
-.calendar-holes::before,
-.calendar-holes::after {
-    content: '';
-    position: absolute;
-    top: 62px; /* Position below header */
-    width: 12px;
-    height: 12px;
-    background: #f5f5f4; /* Stone-100 */
-    border-radius: 50%;
-    z-index: 5;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
-}
+/* DEPRECATED: Binding Rings / Holes removed for modern look */
+/* .calendar-top::before, .calendar-top::after {} */
+/* .calendar-holes::before, .calendar-holes::after {} */
 
 /* Timer Circle Animation */
 .timer-circle-bg {
@@ -149,10 +166,16 @@ body {
 }
 .timer-circle-progress {
     fill: none;
-    stroke: var(--secondary-color);
+    stroke: #10b981; /* Focus green */
     stroke-width: 8;
     stroke-linecap: round;
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4));
     transform: rotate(-90deg);
     transform-origin: center;
-    transition: stroke-dashoffset 1s linear;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+}
+
+.timer-circle-progress.stopwatch-mode {
+    stroke: #3b82f6; /* Blue for stopwatch */
+    filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
 }
